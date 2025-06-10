@@ -724,13 +724,13 @@ const AdminTasks = () => {
                 </div>
                 <div>
                   <label
-                    htmlFor="taskDescription"
+                    htmlFor="task-description"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
                     Description
                   </label>
                   <textarea
-                    id="taskDescription"
+                    id="task-description"
                     name="taskDescription"
                     value={newTaskData.taskDescription}
                     onChange={(e) =>
@@ -958,6 +958,8 @@ const AdminTasks = () => {
                           {editTaskId === task.taskItemId ? (
                             <input
                               type="text"
+                              id="edit-task-description"
+                              name="taskDescription"
                               value={editTaskData.taskDescription || ""}
                               onChange={(e) =>
                                 setEditTaskData((prev) => ({
@@ -1017,23 +1019,22 @@ const AdminTasks = () => {
                           {editTaskId === task.taskItemId ? (
                             <input
                               type="date"
+                              id="edit-task-created-at"
+                              name="createdAt"
                               value={(() => {
                                 if (!editTaskData.createdAt) return "";
                                 const parts = editTaskData.createdAt.split("-");
                                 if (parts.length === 3) {
                                   if (parts[0].length === 4) {
-                                    // already yyyy-mm-dd
                                     return editTaskData.createdAt;
                                   } else {
-                                    // dd-mm-yyyy -> yyyy-mm-dd
                                     return `${parts[2]}-${parts[1]}-${parts[0]}`;
                                   }
                                 }
                                 return editTaskData.createdAt;
                               })()}
                               onChange={(e) => {
-                                const [yyyy, mm, dd] =
-                                  e.target.value.split("-");
+                                const [yyyy, mm, dd] = e.target.value.split("-");
                                 setEditTaskData((prev) => ({
                                   ...prev,
                                   createdAt: `${dd}-${mm}-${yyyy}`,

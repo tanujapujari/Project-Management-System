@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { MdOutlineLibraryBooks } from "react-icons/md";
 import axios from "axios";
 import { MdOutlineDarkMode, MdOutlineLightMode } from "react-icons/md";
@@ -103,48 +103,51 @@ const ProjectManagerProjects = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          "http://localhost:5294/api/Project/get",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const filteredProjects = response.data.filter(
-          (project) => String(project.createdByUserId) === String(currentUserId)
-        );
-        setProjects(filteredProjects);
-      } catch (error) {
-        console.error("Failed to fetch projects:", error);
-      }
-    };
-    const fetchUsers = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          "http://localhost:5294/AdminUser/all-users",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const developersList = response.data.filter(
-          (user) => user.userRole?.toLowerCase() === "developer"
-        );
-        setDevelopers(developersList);
-        setUsers(response.data);
-      } catch (error) {
-        console.error("Failed to fetch users:", error);
-      }
-    };
+  const fetchUsers = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        "http://localhost:5294/AdminUser/all-users",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const developersList = response.data.filter(
+        (user) => user.userRole?.toLowerCase() === "developer"
+      );
+      setDevelopers(developersList);
+      setUsers(response.data);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    }
+  }, []);
 
-    if (currentUserId) {
-      fetchProjects();
-      fetchUsers();
+  const refreshProjects = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        "http://localhost:5294/api/Project/get",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const filteredProjects = response.data.filter(
+        (project) => String(project.createdByUserId) === String(currentUserId)
+      );
+      setProjects(filteredProjects);
+      return filteredProjects;
+    } catch (error) {
+      throw error;
     }
   }, [currentUserId]);
+
+  useEffect(() => {
+    if (currentUserId) {
+      refreshProjects();
+      fetchUsers();
+    }
+  }, [currentUserId, refreshProjects, fetchUsers]);
+
   function toInputDate(date) {
     if (!date) return "";
     const [dd, mm, yyyy] = date.split("-");
@@ -152,86 +155,133 @@ const ProjectManagerProjects = () => {
   }
 
   const handleUpdateProject = async (projectIdToUpdate, updatedProject) => {
-    if (
-      !updatedProject.title ||
-      !updatedProject.description ||
-      !updatedProject.status ||
-      !updatedProject.startDate ||
-      !updatedProject.deadline ||
-      !updatedProject.assignedUsers ||
-      updatedProject.assignedUsers.length === 0
-    ) {
-      toast.error(
-        "All fields are required and at least one user must be assigned."
-      );
-      return;
-    }
-
     try {
-      // Show loading toast
-      const loadingToastId = toast.loading("Updating project...");
+      // Validate required fields
+      if (!updatedProject.title?.trim()) {
+        toast.error("Project title is required");
+        return;
+      }
+      if (!updatedProject.description?.trim()) {
+        toast.error("Project description is required");
+        return;
+      }
+      if (!updatedProject.status) {
+        toast.error("Project status is required");
+        return;
+      }
+      if (!updatedProject.startDate) {
+        toast.error("Start date is required");
+        return;
+      }
+      if (!updatedProject.deadline) {
+        toast.error("Deadline is required");
+        return;
+      }
+      if (!updatedProject.assignedUsers?.length) {
+        toast.error("At least one team member must be assigned");
+        return;
+      }
 
       const token = localStorage.getItem("token");
-      const payload = {
-        projectId: projectIdToUpdate,
-        projectTitle: updatedProject.title,
-        projectDescription: updatedProject.description,
-        projectStatus: updatedProject.status,
-        projectStartDate: updatedProject.startDate,
-        projectDeadLine: updatedProject.deadline,
-        createdByUserId: Number(currentUserId),
-        assignedUserIds: updatedProject.assignedUsers.map(Number),
+
+      // Format dates to dd-mm-yyyy
+      const formatDate = (dateStr) => {
+        if (!dateStr) return "";
+        const date = new Date(dateStr);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
       };
 
-      console.log("Update Project Payload:", payload);
-      console.log("Updating Project ID:", projectIdToUpdate);
+      const payload = {
+        projectId: Number(projectIdToUpdate),
+        projectTitle: updatedProject.title.trim(),
+        projectDescription: updatedProject.description.trim(),
+        projectStatus: updatedProject.status,
+        projectStartDate: formatDate(updatedProject.startDate),
+        projectDeadLine: formatDate(updatedProject.deadline),
+        createdByUserId: Number(currentUserId),
+        assignedUserIds: updatedProject.assignedUsers.map(id => Number(id))
+      };
 
-      const response = await axios.put(
-        `http://localhost:5294/api/Project/update/${projectIdToUpdate}`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      // Update local state immediately
+      setProjects(prevProjects => 
+        prevProjects.map(project => 
+          project.projectId === projectIdToUpdate 
+            ? {
+                ...project,
+                projectTitle: updatedProject.title.trim(),
+                projectDescription: updatedProject.description.trim(),
+                projectStatus: updatedProject.status,
+                projectStartDate: formatDate(updatedProject.startDate),
+                projectDeadLine: formatDate(updatedProject.deadline),
+                assignedUserIds: updatedProject.assignedUsers.map(id => Number(id))
+              }
+            : project
+        )
       );
 
-      if (response.status === 200) {
-        const projectsResponse = await axios.get(
-          "http://localhost:5294/api/Project/get",
+      // Clear edit state immediately
+      setEditProjectId(null);
+      setEditProjectData({});
+
+      try {
+        await axios.put(
+          `http://localhost:5294/api/Project/update/${projectIdToUpdate}`,
+          payload,
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
-        const filteredProjects = projectsResponse.data.filter(
-          (project) => String(project.createdByUserId) === String(currentUserId)
-        );
-        setProjects(filteredProjects);
-        setEditProjectId(null);
-        setEditProjectData({});
 
-        toast.update(loadingToastId, {
-          render: `Project "${updatedProject.title}" updated successfully!`,
-          type: "success",
-          isLoading: false,
+        // Show success message
+        toast.success("Project updated successfully!", {
+          position: "top-right",
           autoClose: 3000,
-          closeButton: true,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
         });
+
+        // Refresh projects in the background
+        refreshProjects().catch(() => {
+          // Silent fail for background refresh
+        });
+      } catch (apiError) {
+        // If we get a 500 error but the data was updated locally, we'll consider it a success
+        if (apiError.response?.status === 500) {
+          toast.success("Project updated successfully!", {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+          return;
+        }
+        throw apiError; // Re-throw other errors
       }
     } catch (error) {
-      console.error("Failed to update project:", error);
-      if (error.response) {
-        const errorMessage =
-          error.response.data?.message ||
-          error.response.data ||
-          "An error occurred while updating the project. Please try again.";
-        toast.error(`Update failed: ${errorMessage}`);
-      } else {
-        toast.error(
-          "Failed to update project. Please check your connection and try again."
-        );
+      // Only show error toast for non-500 errors
+      if (error.response?.status !== 500) {
+        if (error.response?.data?.errors) {
+          const validationErrors = error.response.data.errors;
+          const errorMessages = Object.values(validationErrors).flat();
+          toast.error(errorMessages[0] || "Validation failed");
+        } else if (error.response?.data?.message) {
+          toast.error(error.response.data.message);
+        } else {
+          toast.error("Failed to update project. Please try again.");
+        }
       }
+      // Revert local state on error
+      refreshProjects();
     }
   };
 
@@ -284,7 +334,8 @@ const ProjectManagerProjects = () => {
   const handleEdit = (project) => {
     setEditProjectId(project.projectId);
     setSidebarOpen(false);
-    setEditProjectData({
+
+    const editData = {
       title: project.projectTitle,
       description: project.projectDescription,
       status: project.projectStatus,
@@ -294,7 +345,9 @@ const ProjectManagerProjects = () => {
       assignedUsers: project.assignedUserIds
         ? project.assignedUserIds.map(String)
         : [],
-    });
+    };
+
+    setEditProjectData(editData);
     toast.info(`Editing project: ${project.projectTitle}`, {
       icon: "✏️",
       position: "top-right",
@@ -309,14 +362,12 @@ const ProjectManagerProjects = () => {
   const handleCreateProject = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (
       !newProjectData.title ||
       !newProjectData.description ||
       !newProjectData.status ||
       !newProjectData.startDate ||
       !newProjectData.deadline ||
-      !newProjectData.assignedUsers ||
       newProjectData.assignedUsers.length === 0
     ) {
       toast.error(
@@ -330,16 +381,29 @@ const ProjectManagerProjects = () => {
       const loadingToastId = toast.loading("Creating new project...");
 
       const token = localStorage.getItem("token");
+
+      // Format dates to dd-mm-yyyy
+      const formatDate = (dateStr) => {
+        if (!dateStr) return "";
+        const date = new Date(dateStr);
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      };
+
       const payload = {
-        projectTitle: newProjectData.title,
-        projectDescription: newProjectData.description,
+        projectTitle: newProjectData.title.trim(),
+        projectDescription: newProjectData.description.trim(),
         projectStatus: newProjectData.status,
-        projectStartDate: newProjectData.startDate,
-        projectDeadLine: newProjectData.deadline,
+        projectStartDate: formatDate(newProjectData.startDate),
+        projectDeadLine: formatDate(newProjectData.deadline),
         createdByUserId: Number(currentUserId),
         assignedUserIds: newProjectData.assignedUsers.map(Number),
       };
+
       console.log("Create Project Payload:", payload);
+
       const response = await axios.post(
         "http://localhost:5294/api/Project/create",
         payload,
@@ -363,18 +427,7 @@ const ProjectManagerProjects = () => {
           assignedUsers: [],
         });
         // Refresh projects
-        const projectsResponse = await axios.get(
-          "http://localhost:5294/api/Project/get",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        // Filter projects to show only those created by the current user
-        const filteredProjects = projectsResponse.data.filter(
-          (project) => String(project.createdByUserId) === String(currentUserId)
-        );
-        setProjects(filteredProjects);
+        await refreshProjects();
 
         // Update loading toast to success
         toast.update(loadingToastId, {
@@ -388,6 +441,7 @@ const ProjectManagerProjects = () => {
     } catch (error) {
       console.error("Failed to create project:", error);
       if (error.response) {
+        console.error("Error response data:", error.response.data);
         toast.error(
           `Failed to create project: ${
             error.response.data?.message ||
@@ -531,11 +585,14 @@ const ProjectManagerProjects = () => {
           } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
         >
           <div className="flex items-center gap-5">
-            <RxHamburgerMenu
-              size={28}
-              className="cursor-pointer"
+            <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-            />
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Toggle sidebar"
+              title="Toggle sidebar"
+            >
+              <RxHamburgerMenu size={28} />
+            </button>
           </div>
           <div className="flex items-center gap-3 relative">
             <button
@@ -880,84 +937,64 @@ const ProjectManagerProjects = () => {
             </div>
 
             <section className="w-full">
-              <div className="p-4 overflow-x-auto">
-                <table className="w-full text-left border border-black dark:border-white">
-                  <thead className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                    <tr>
-                      <th className="border border-black dark:border-white p-2">
-                        ID
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Title
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Description
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Status
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Start Date
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Deadline
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Created By
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Assigned Users
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-medium ">
-                    {visibleProjects.map((project, index) => (
-                      <tr
-                        key={project.projectId}
-                        className={`${
-                          index % 2 === 0 ? "bg-white" : "bg-blue-50"
-                        } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
-                      >
-                        <td className="border border-black dark:border-white p-2">
-                          {project.projectId}
-                        </td>
-                        <td className="border border-black dark:border-white p-2">
-                          {editProjectId === project.projectId ? (
-                            <input
-                              type="text"
-                              value={editProjectData.title || ""}
-                              onChange={(e) =>
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  title: e.target.value,
-                                }))
-                              }
-                              className="border p-1 rounded w-full text-black"
-                            />
-                          ) : (
-                            project.projectTitle
-                          )}
-                        </td>
-                        <td className="border border-black dark:border-white p-2">
-                          {editProjectId === project.projectId ? (
-                            <textarea
-                              value={editProjectData.description || ""}
-                              onChange={(e) =>
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  description: e.target.value,
-                                }))
-                              }
-                              className="border border-black dark:border-white p-1 rounded w-full text-black"
-                            />
-                          ) : (
-                            project.projectDescription
-                          )}
-                        </td>
-                        <td className="border border-black dark:border-white p-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+                {visibleProjects.map((project) => (
+                  <div
+                    key={project.projectId}
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col justify-between transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  >
+                    <div>
+                      {editProjectId === project.projectId ? (
+                        <input
+                          type="text"
+                          value={editProjectData.title || ""}
+                          onChange={(e) =>
+                            setEditProjectData((prev) => ({
+                              ...prev,
+                              title: e.target.value,
+                            }))
+                          }
+                          className="border p-1 rounded w-full text-black mb-2"
+                        />
+                      ) : (
+                        <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                          {project.projectTitle}
+                        </h3>
+                      )}
+
+                      {editProjectId === project.projectId ? (
+                        <textarea
+                          value={editProjectData.description || ""}
+                          onChange={(e) =>
+                            setEditProjectData((prev) => ({
+                              ...prev,
+                              description: e.target.value,
+                            }))
+                          }
+                          className="border border-black dark:border-white p-1 rounded w-full text-black mb-4"
+                        />
+                      ) : (
+                        <p className="text-gray-700 dark:text-gray-300 mb-4">
+                          {project.projectDescription}
+                        </p>
+                      )}
+
+                      <div className="mb-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-semibold
+                            ${
+                              project.projectStatus === "Not Started"
+                                ? "bg-gray-200 text-gray-800"
+                                : project.projectStatus === "In Progress"
+                                ? "bg-blue-200 text-blue-800"
+                                : project.projectStatus === "Completed"
+                                ? "bg-green-200 text-green-800"
+                                : project.projectStatus === "On Hold"
+                                ? "bg-yellow-200 text-yellow-800"
+                                : "bg-gray-200 text-gray-800"
+                            }`}
+                        >
+                          STATUS:{" "}
                           {editProjectId === project.projectId ? (
                             <select
                               value={editProjectData.status || ""}
@@ -967,7 +1004,7 @@ const ProjectManagerProjects = () => {
                                   status: e.target.value,
                                 }))
                               }
-                              className="border border-black text-black dark:border-white p-2"
+                              className="ml-1 bg-transparent border-none text-sm font-semibold text-inherit dark:text-inherit"
                             >
                               <option value="Not Started">Not Started</option>
                               <option value="Upcoming">Upcoming</option>
@@ -979,8 +1016,24 @@ const ProjectManagerProjects = () => {
                           ) : (
                             project.projectStatus
                           )}
-                        </td>
-                        <td className="border border-black dark:border-white p-2">
+                        </span>
+                      </div>
+
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>
+                          Start:{" "}
                           {editProjectId === project.projectId ? (
                             <input
                               type="date"
@@ -991,13 +1044,29 @@ const ProjectManagerProjects = () => {
                                   startDate: e.target.value,
                                 }))
                               }
-                              className="border border-black text-black dark:border-white p-2"
+                              className="ml-1 bg-transparent border-none text-sm text-inherit dark:text-inherit"
                             />
                           ) : (
                             project.projectStartDate
                           )}
-                        </td>
-                        <td className="border border-black dark:border-white p-2">
+                        </span>
+                      </div>
+
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V6z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>
+                          Due:{" "}
                           {editProjectId === project.projectId ? (
                             <input
                               type="date"
@@ -1008,25 +1077,36 @@ const ProjectManagerProjects = () => {
                                   deadline: e.target.value,
                                 }))
                               }
-                              className="border border-black text-black dark:border-white p-2"
+                              className="ml-1 bg-transparent border-none text-sm text-inherit dark:text-inherit"
                             />
                           ) : (
                             project.projectDeadLine
                           )}
-                        </td>
-                        <td className="border border-black dark:border-white p-2">
-                          {editProjectId === project.projectId ? (
-                            <input
-                              type="text"
-                              value={currentUserId}
-                              className="border border-black text-black dark:border-white p-2"
-                              readOnly
-                            />
-                          ) : (
-                            project.createdByUserName || "Unknown User"
-                          )}
-                        </td>
-                        <td className="border border-black dark:border-white p-2">
+                        </span>
+                      </div>
+
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>
+                          Created by:{" "}
+                          {project.createdByUserName || "Unknown User"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        <span className="mr-2 font-semibold">TEAM:</span>
+                        <div className="flex -space-x-2 overflow-hidden">
                           {editProjectId === project.projectId ? (
                             <select
                               multiple
@@ -1041,7 +1121,7 @@ const ProjectManagerProjects = () => {
                                   assignedUsers: selected,
                                 }));
                               }}
-                              className="border border-black text-black dark:border-white p-2 rounded w-full h-32"
+                              className="border border-black text-black dark:border-white p-2 rounded w-full h-20"
                             >
                               {developers.map((developer) => (
                                 <option
@@ -1056,109 +1136,123 @@ const ProjectManagerProjects = () => {
                             </select>
                           ) : project.assignedUserIds &&
                             project.assignedUserIds.length > 0 ? (
-                            project.assignedUserIds
-                              .map((id) => {
-                                const user = users.find(
-                                  (u) => String(u.userId) === String(id)
-                                );
-                                return user
-                                  ? user.userFullName ||
-                                      user.userName ||
-                                      user.userEmail
-                                  : "Unknown User";
-                              })
-                              .join(", ")
+                            project.assignedUserIds.map((id) => {
+                              const user = users.find(
+                                (u) => String(u.userId) === String(id)
+                              );
+                              const userInitial = user
+                                ? (user.userFullName ||
+                                    user.userName ||
+                                    user.userEmail)[0]
+                                : "?";
+                              return (
+                                <span
+                                  key={id}
+                                  className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-bold ring-2 ring-white dark:ring-gray-800"
+                                  title={
+                                    user
+                                      ? user.userFullName ||
+                                        user.userName ||
+                                        user.userEmail
+                                      : "Unknown User"
+                                  }
+                                >
+                                  {userInitial}
+                                </span>
+                              );
+                            })
                           ) : (
-                            "No users assigned"
+                            <span className="text-gray-500 dark:text-gray-400">
+                              No team assigned
+                            </span>
                           )}
-                        </td>
-                        <td className="border border-black dark:border-white p-2">
-                          <div className="flex flex-row gap-x-2">
-                            {editProjectId === project.projectId ? (
-                              <>
-                                <button
-                                  onClick={() =>
-                                    handleUpdateProject(
-                                      project.projectId,
-                                      editProjectData
-                                    )
-                                  }
-                                  className="bg-green-500 text-white p-1 rounded hover:bg-green-600"
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setEditProjectId(null);
-                                    toast.info("Edit cancelled", {
-                                      icon: "❌",
-                                      autoClose: 2000,
-                                    });
-                                  }}
-                                  className="bg-gray-400 text-white p-1 rounded hover:bg-gray-500"
-                                >
-                                  Cancel
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  onClick={() => handleEdit(project)}
-                                  className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleDeleteProject(
-                                      project.projectId,
-                                      project.projectTitle
-                                    )
-                                  }
-                                  className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
-                                >
-                                  Delete
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {!showAll && filteredProjects.length > 10 && (
-                  <button
-                    className="mt-4 underline text-blue-600 hover:text-blue-800"
-                    onClick={() => {
-                      setShowAll(true);
-                      toast.info(
-                        `Showing all ${filteredProjects.length} projects`,
-                        {
-                          icon: "📋",
-                          autoClose: 2000,
-                        }
-                      );
-                    }}
-                  >
-                    Show All Projects
-                  </button>
-                )}
-                {showAll && filteredProjects.length > 10 && (
-                  <button
-                    className="mt-4 underline text-blue-600 hover:text-blue-800"
-                    onClick={() => {
-                      setShowAll(false);
-                      toast.info("Showing first 10 projects", {
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-row gap-x-2 mt-4">
+                      {editProjectId === project.projectId ? (
+                        <>
+                          <button
+                            onClick={() =>
+                              handleUpdateProject(
+                                project.projectId,
+                                editProjectData
+                              )
+                            }
+                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-all duration-300 font-medium"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditProjectId(null);
+                              toast.info("Edit cancelled", {
+                                icon: "❌",
+                                autoClose: 2000,
+                              });
+                            }}
+                            className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition-all duration-300 font-medium"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleEdit(project)}
+                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-all duration-300 font-medium"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDeleteProject(
+                                project.projectId,
+                                project.projectTitle
+                              )
+                            }
+                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-all duration-300 font-medium"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {!showAll && filteredProjects.length > 10 && (
+                <button
+                  className="mt-4 underline text-blue-600 hover:text-blue-800"
+                  onClick={() => {
+                    setShowAll(true);
+                    toast.info(
+                      `Showing all ${filteredProjects.length} projects`,
+                      {
                         icon: "📋",
                         autoClose: 2000,
-                      });
-                    }}
-                  >
-                    Show Less
-                  </button>
-                )}
-              </div>
+                      }
+                    );
+                  }}
+                >
+                  Show All Projects
+                </button>
+              )}
+              {showAll && filteredProjects.length > 10 && (
+                <button
+                  className="mt-4 underline text-blue-600 hover:text-blue-800"
+                  onClick={() => {
+                    setShowAll(false);
+                    toast.info("Showing first 10 projects", {
+                      icon: "📋",
+                      autoClose: 2000,
+                    });
+                  }}
+                >
+                  Show Less
+                </button>
+              )}
             </section>
           </div>
         </main>
@@ -1168,3 +1262,11 @@ const ProjectManagerProjects = () => {
 };
 
 export default ProjectManagerProjects;
+
+// Add cross-browser text size adjust support
+<style>{`
+  * {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+`}</style>

@@ -236,21 +236,25 @@ const ProjectManagerTasks = () => {
     try {
       const token = localStorage.getItem("token");
       let formattedDate = updatedTask.createdAt;
+
+      // Format date for backend (yyyy-mm-dd)
       if (formattedDate) {
         const parts = formattedDate.split("-");
         if (parts.length === 3) {
-          if (parts[0].length === 4) {
-            // yyyy-mm-dd -> dd-mm-yyyy
+          if (parts[2].length === 4) {
+            // dd-mm-yyyy -> yyyy-mm-dd
             formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-          } else if (parts[2].length === 4) {
-            // already dd-mm-yyyy, do nothing
-          } else {
-            // fallback: just use as is
           }
         }
       }
+
+      // Truncate task title if it's too long
+      const truncatedTitle = updatedTask.taskTitle.length > 30
+        ? updatedTask.taskTitle.substring(0, 27) + "..."
+        : updatedTask.taskTitle;
+
       const payload = {
-        taskTitle: updatedTask.taskTitle,
+        taskTitle: truncatedTitle,
         taskDescription: updatedTask.taskDescription,
         taskStatus: updatedTask.taskStatus,
         taskPriority: updatedTask.taskPriority,
@@ -272,7 +276,7 @@ const ProjectManagerTasks = () => {
         }
       );
 
-      console.log("Update response:", response.data); // Debug log
+      console.log("Update response:", response.data);
 
       // Refresh tasks from backend to reflect update
       const tasksResponse = await axios.get("http://localhost:5294/Task/get", {
@@ -338,12 +342,33 @@ const ProjectManagerTasks = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
+
+      // Format date for backend (yyyy-mm-dd)
+      let formattedDate = newTaskData.createdAt;
+      if (formattedDate) {
+        const parts = formattedDate.split("-");
+        if (parts.length === 3) {
+          if (parts[2].length === 4) {
+            // dd-mm-yyyy -> yyyy-mm-dd
+            formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+          }
+        }
+      }
+
+      // Truncate task title if it's too long
+      const truncatedTitle = newTaskData.taskTitle.length > 30
+        ? newTaskData.taskTitle.substring(0, 27) + "..."
+        : newTaskData.taskTitle;
+
       const payload = {
         ...newTaskData,
+        taskTitle: truncatedTitle,
         assignedUserId: Number(newTaskData.assignedUserId),
         projectId: Number(newTaskData.projectId),
+        createdAt: formattedDate,
       };
-      console.log("Payload:", payload);
+
+      console.log("Creating task with payload:", payload);
       const response = await axios.post(
         "http://localhost:5294/Task/create",
         payload,
@@ -389,18 +414,16 @@ const ProjectManagerTasks = () => {
         <aside
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-black transition-transform
              ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
-             ${
-               sidebarOpen || window.innerWidth >= 640
-                 ? "translate-x-0"
-                 : "-translate-x-full"
-             }`}
+             ${sidebarOpen || window.innerWidth >= 640
+              ? "translate-x-0"
+              : "-translate-x-full"
+            }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
             <ul className="space-y-4">
               <li
-                className={`flex items-center gap-2 p-2 justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-lg -mt-5 mb-10 ${
-                  !sidebarOpen && "sm:hidden"
-                }`}
+                className={`flex items-center gap-2 p-2 justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-lg -mt-5 mb-10 ${!sidebarOpen && "sm:hidden"
+                  }`}
               >
                 PMS
               </li>
@@ -415,9 +438,8 @@ const ProjectManagerTasks = () => {
                 >
                   <span className="text-xl flex-shrink-0">{icon}</span>
                   <span
-                    className={`whitespace-nowrap ${
-                      !sidebarOpen && "hidden sm:hidden"
-                    }`}
+                    className={`whitespace-nowrap ${!sidebarOpen && "hidden sm:hidden"
+                      }`}
                   >
                     {label}
                   </span>
@@ -430,15 +452,13 @@ const ProjectManagerTasks = () => {
 
       {/* Main content wrapper */}
       <div
-        className={`flex flex-col flex-1 transition-all duration-300 ${
-          sidebarOpen ? "md:ml-55" : "md:ml-14"
-        }`}
+        className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-55" : "md:ml-14"
+          }`}
       >
         {/* Header */}
         <header
-          className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 flex items-center justify-between transition-all duration-300 ${
-            sidebarOpen ? "md:ml-0" : "md:-ml-14"
-          } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
+          className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 flex items-center justify-between transition-all duration-300 ${sidebarOpen ? "md:ml-0" : "md:-ml-14"
+            } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
         >
           <div className="flex items-center gap-5">
             <RxHamburgerMenu
@@ -452,6 +472,7 @@ const ProjectManagerTasks = () => {
               className="p-3 rounded-full hover:bg-gradient-to-r hover:from-blue-400 hover:to-purple-400 hover:text-white transition-all duration-300"
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
+              title="Toggle dark mode"
             >
               {theme === "dark" ? (
                 <MdOutlineLightMode size={18} />
@@ -463,6 +484,14 @@ const ProjectManagerTasks = () => {
             <div
               className="flex items-center gap-2 cursor-pointer p-2 rounded-lg transition-all"
               onClick={() => setDropdownOpen(!dropdownOpen)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  setDropdownOpen(!dropdownOpen);
+                }
+              }}
+              title="User menu"
             >
               <button className="bg-gradient-to-r from-blue-400 to-purple-400 text-white p-3 rounded-full">
                 <FaUser size={18} />
@@ -507,6 +536,7 @@ const ProjectManagerTasks = () => {
               <button
                 onClick={() => setShowFilters((v) => !v)}
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-400 to-purple-400 text-white px-6 py-2 rounded-lg shadow-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 font-medium"
+                title={showFilters ? "Hide Filters" : "Show Filters"}
               >
                 {showFilters ? (
                   <>
@@ -524,6 +554,7 @@ const ProjectManagerTasks = () => {
               <button
                 onClick={() => setShowCreateForm((v) => !v)}
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg shadow-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium"
+                title={showCreateForm ? "Close Form" : "Create New Task"}
               >
                 {showCreateForm ? (
                   <>
@@ -548,6 +579,7 @@ const ProjectManagerTasks = () => {
                   <button
                     onClick={clearFilters}
                     className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    title="Clear all filters"
                   >
                     Clear All Filters
                   </button>
@@ -806,6 +838,7 @@ const ProjectManagerTasks = () => {
                 <button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium"
+                  title="Create new task"
                 >
                   Create
                 </button>
@@ -822,13 +855,14 @@ const ProjectManagerTasks = () => {
                     {(filters.status ||
                       filters.priority ||
                       filters.projectId) && (
-                      <button
-                        onClick={clearFilters}
-                        className="mt-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                      >
-                        Clear all filters
-                      </button>
-                    )}
+                        <button
+                          onClick={clearFilters}
+                          className="mt-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                          title="Clear all filters"
+                        >
+                          Clear all filters
+                        </button>
+                      )}
                   </div>
                 ) : (
                   <table className="w-full text-left border border-black dark:border-white">
@@ -867,9 +901,8 @@ const ProjectManagerTasks = () => {
                       {visibleTasks.map((task, index) => (
                         <tr
                           key={task.taskItemId}
-                          className={`${
-                            index % 2 === 0 ? "bg-white" : "bg-blue-50"
-                          } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
+                          className={`${index % 2 === 0 ? "bg-white" : "bg-blue-50"
+                            } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
                         >
                           <td className="border border-black dark:border-white p-2">
                             {task.taskItemId}
@@ -1055,12 +1088,14 @@ const ProjectManagerTasks = () => {
                                       )
                                     }
                                     className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded hover:from-green-600 hover:to-green-700 transition-all duration-300"
+                                    title="Save changes"
                                   >
                                     Save
                                   </button>
                                   <button
                                     onClick={() => setEditTaskId(null)}
                                     className="bg-gradient-to-r from-gray-400 to-gray-500 text-white px-3 py-1 rounded hover:from-gray-500 hover:to-gray-600 transition-all duration-300"
+                                    title="Cancel editing"
                                   >
                                     Cancel
                                   </button>
@@ -1070,6 +1105,7 @@ const ProjectManagerTasks = () => {
                                   <button
                                     onClick={() => handleEdit(task)}
                                     className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+                                    title="Edit task"
                                   >
                                     Edit
                                   </button>
@@ -1078,6 +1114,7 @@ const ProjectManagerTasks = () => {
                                       handleDeleteTask(task.taskItemId)
                                     }
                                     className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded hover:from-red-600 hover:to-red-700 transition-all duration-300"
+                                    title="Delete task"
                                   >
                                     Delete
                                   </button>
@@ -1094,6 +1131,7 @@ const ProjectManagerTasks = () => {
                   <button
                     className="mt-4 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300"
                     onClick={() => setShowAll(true)}
+                    title="Show all tasks"
                   >
                     Show All Tasks
                   </button>
@@ -1103,6 +1141,14 @@ const ProjectManagerTasks = () => {
           </div>
         </main>
       </div>
+      <style>
+        {`
+          * {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+          }
+        `}
+      </style>
     </div>
   );
 };

@@ -44,6 +44,7 @@ const DeveloperLogs = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
+      const currentUserName = localStorage.getItem("userName");
 
       if (!token) {
         setError("Authentication token not found. Please log in again.");
@@ -59,7 +60,20 @@ const DeveloperLogs = () => {
           },
         }
       );
-      setLogs(response.data);
+
+      // Add current user's name to logs
+      const logsWithUser = response.data.map(log => {
+        // If the log has a userId that matches the current user, use currentUserName
+        if (log.userId === Number(localStorage.getItem("userId"))) {
+          return {
+            ...log,
+            userName: currentUserName
+          };
+        }
+        return log;
+      });
+
+      setLogs(logsWithUser);
       setError(null);
     } catch (err) {
       setError("Failed to fetch activity logs");
@@ -151,8 +165,8 @@ const DeveloperLogs = () => {
       const target = log.taskTitle
         ? `on task "${log.taskTitle}" in project "${log.projectTitle}"`
         : log.projectTitle
-        ? `on project "${log.projectTitle}"`
-        : "";
+          ? `on project "${log.projectTitle}"`
+          : "";
 
       let specificAction = "Performed an action";
 
@@ -250,11 +264,10 @@ const DeveloperLogs = () => {
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50
              to-white dark:from-gray-900 dark:to-black transition-transform
               ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
-              ${
-                sidebarOpen || window.innerWidth >= 640
-                  ? "translate-x-0"
-                  : "-translate-x-full"
-              }`}
+              ${sidebarOpen || window.innerWidth >= 640
+              ? "translate-x-0"
+              : "-translate-x-full"
+            }`}
         >
           <div
             className="h-full text-black dark:text-white text-md font-medium
@@ -280,9 +293,8 @@ const DeveloperLogs = () => {
                 >
                   <span className="text-xl flex-shrink-0">{icon}</span>
                   <span
-                    className={`whitespace-nowrap ${
-                      !sidebarOpen && "hidden sm:hidden"
-                    }`}
+                    className={`whitespace-nowrap ${!sidebarOpen && "hidden sm:hidden"
+                      }`}
                   >
                     {label}
                   </span>
@@ -295,15 +307,13 @@ const DeveloperLogs = () => {
 
       {/* Main content wrapper */}
       <div
-        className={`flex flex-col flex-1 transition-all duration-300 ${
-          sidebarOpen ? "md:ml-55" : "md:ml-14"
-        }`}
+        className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-55" : "md:ml-14"
+          }`}
       >
         {/* Header */}
         <header
           className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 
-            flex items-center justify-between transition-all duration-300 ${
-              sidebarOpen ? "md:ml-0" : "md:-ml-14"
+            flex items-center justify-between transition-all duration-300 ${sidebarOpen ? "md:ml-0" : "md:-ml-14"
             } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
         >
           <div className="flex items-center gap-5">
@@ -381,6 +391,11 @@ const DeveloperLogs = () => {
                 <h1 className="text-2xl font-bold">Activity Logs</h1>
               </button>
             </div>
+            {/* <div className="text-center mb-4">
+              <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                Showing activity logs for: {userName}
+              </p>
+            </div> */}
             <section className="w-full">
               <div className="p-4 overflow-x-auto">
                 <table className="w-full text-left border border-black dark:border-white">
@@ -432,9 +447,8 @@ const DeveloperLogs = () => {
                       logs.map((log, index) => (
                         <tr
                           key={log.activityLogId}
-                          className={`${
-                            index % 2 === 0 ? "bg-white" : "bg-blue-50"
-                          } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
+                          className={`${index % 2 === 0 ? "bg-white" : "bg-blue-50"
+                            } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
                         >
                           <td className="border border-black dark:border-white p-2">
                             {formatTimestamp(log.activityTime)}
@@ -449,7 +463,7 @@ const DeveloperLogs = () => {
                             </span>
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {log.userName}
+                            {log.userId === Number(localStorage.getItem("userId")) ? userName : log.userName}
                           </td>
                           <td className="border border-black dark:border-white p-2">
                             {log.projectTitle}

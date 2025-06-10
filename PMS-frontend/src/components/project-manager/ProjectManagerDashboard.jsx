@@ -364,8 +364,8 @@ const ProjectManagerDashboard = () => {
               const target = activity.taskTitle
                 ? `on task "${activity.taskTitle}" in project "${activity.projectTitle}"`
                 : activity.projectTitle
-                ? `on project "${activity.projectTitle}"`
-                : "";
+                  ? `on project "${activity.projectTitle}"`
+                  : "";
               formattedDetails = `Comment ${target}`;
             }
 
@@ -500,18 +500,16 @@ const ProjectManagerDashboard = () => {
         <aside
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-white to-blue-200 dark:from-gray-900 dark:to-black transition-transform
           ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
-          ${
-            sidebarOpen || window.innerWidth >= 640
+          ${sidebarOpen || window.innerWidth >= 640
               ? "translate-x-0"
               : "-translate-x-full"
-          }`}
+            }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
             <ul className="space-y-4">
               <li
-                className={`flex items-center gap-2 p-2 justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-lg -mt-5 mb-10 ${
-                  !sidebarOpen && "sm:hidden"
-                }`}
+                className={`flex items-center gap-2 p-2 justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-lg -mt-5 mb-10 ${!sidebarOpen && "sm:hidden"
+                  }`}
               >
                 PMS
               </li>
@@ -526,9 +524,8 @@ const ProjectManagerDashboard = () => {
                 >
                   <span className="text-xl flex-shrink-0">{icon}</span>
                   <span
-                    className={`whitespace-nowrap ${
-                      !sidebarOpen && "hidden sm:hidden"
-                    }`}
+                    className={`whitespace-nowrap ${!sidebarOpen && "hidden sm:hidden"
+                      }`}
                   >
                     {label}
                   </span>
@@ -541,15 +538,13 @@ const ProjectManagerDashboard = () => {
 
       {/* Main content wrapper */}
       <div
-        className={`flex flex-col flex-1 transition-all duration-300 ${
-          sidebarOpen ? "md:ml-55" : "md:ml-14"
-        }`}
+        className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-55" : "md:ml-14"
+          }`}
       >
         {/* Header */}
         <header
-          className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 flex items-center justify-between transition-all duration-300 ${
-            sidebarOpen ? "md:ml-0" : "md:-ml-14"
-          } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
+          className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 flex items-center justify-between transition-all duration-300 ${sidebarOpen ? "md:ml-0" : "md:-ml-14"
+            } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
         >
           <div className="flex items-center gap-5">
             <RxHamburgerMenu
@@ -609,16 +604,14 @@ const ProjectManagerDashboard = () => {
               <div className="flex items-center justify-center">
                 <div className="relative">
                   <h1
-                    className={`text-4xl font-bold ${
-                      theme === "dark" ? "text-white" : "text-black"
-                    }`}
+                    className={`text-4xl font-bold ${theme === "dark" ? "text-white" : "text-black"
+                      }`}
                   >
                     <span className="inline-block">
                       {displayText}
                       <span
-                        className={`inline-block w-0.5 h-8 ${
-                          theme === "dark" ? "bg-white" : "bg-black"
-                        } ml-1 animate-blink`}
+                        className={`inline-block w-0.5 h-8 ${theme === "dark" ? "bg-white" : "bg-black"
+                          } ml-1 animate-blink`}
                       ></span>
                     </span>
                   </h1>
@@ -633,9 +626,8 @@ const ProjectManagerDashboard = () => {
                 <div className="flex items-center gap-3 mb-4">
                   <FaProjectDiagram className="text-2xl text-blue-500" />
                   <h2
-                    className={`text-xl font-semibold ${
-                      theme === "dark" ? "text-white" : "text-black"
-                    }`}
+                    className={`text-xl font-semibold ${theme === "dark" ? "text-white" : "text-black"
+                      }`}
                   >
                     My Created Projects
                   </h2>
@@ -673,9 +665,8 @@ const ProjectManagerDashboard = () => {
                 </div>
                 <div className="mt-4 text-center">
                   <p
-                    className={`text-lg font-medium ${
-                      theme === "dark" ? "text-white" : "text-black"
-                    }`}
+                    className={`text-lg font-medium ${theme === "dark" ? "text-white" : "text-black"
+                      }`}
                   >
                     Total Projects Created: {summaryData.projects.total}
                   </p>
@@ -687,9 +678,8 @@ const ProjectManagerDashboard = () => {
                 <div className="flex items-center gap-3 mb-4">
                   <FiUsers className="text-2xl text-purple-500" />
                   <h2
-                    className={`text-xl font-semibold ${
-                      theme === "dark" ? "text-white" : "text-black"
-                    }`}
+                    className={`text-xl font-semibold ${theme === "dark" ? "text-white" : "text-black"
+                      }`}
                   >
                     Developers Summary
                   </h2>
@@ -712,41 +702,36 @@ const ProjectManagerDashboard = () => {
                 </div>
                 <div className="mt-4 text-center">
                   <p
-                    className={`text-lg font-medium ${
-                      theme === "dark" ? "text-white" : "text-black"
-                    }`}
+                    className={`text-lg font-medium ${theme === "dark" ? "text-white" : "text-black"
+                      }`}
                   >
                     Total Developers: {summaryData.users.developer}
                   </p>
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     <div className="bg-white/20 dark:bg-black/20 p-2 rounded-lg">
                       <p
-                        className={`text-sm ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
+                        className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                          }`}
                       >
                         Active
                       </p>
                       <p
-                        className={`text-lg font-semibold ${
-                          theme === "dark" ? "text-white" : "text-black"
-                        }`}
+                        className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-black"
+                          }`}
                       >
                         {summaryData.users.developer}
                       </p>
                     </div>
                     <div className="bg-white/20 dark:bg-black/20 p-2 rounded-lg">
                       <p
-                        className={`text-sm ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
+                        className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                          }`}
                       >
                         On Project
                       </p>
                       <p
-                        className={`text-lg font-semibold ${
-                          theme === "dark" ? "text-white" : "text-black"
-                        }`}
+                        className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-black"
+                          }`}
                       >
                         {summaryData.users.assignedDevelopers}
                       </p>
@@ -760,9 +745,8 @@ const ProjectManagerDashboard = () => {
                 <div className="flex items-center gap-3 mb-4">
                   <FaTasks className="text-2xl text-green-500" />
                   <h2
-                    className={`text-xl font-semibold ${
-                      theme === "dark" ? "text-white" : "text-black"
-                    }`}
+                    className={`text-xl font-semibold ${theme === "dark" ? "text-white" : "text-black"
+                      }`}
                   >
                     Tasks Summary
                   </h2>
@@ -787,9 +771,8 @@ const ProjectManagerDashboard = () => {
                 </div>
                 <div className="mt-4 text-center">
                   <p
-                    className={`text-lg font-medium ${
-                      theme === "dark" ? "text-white" : "text-black"
-                    }`}
+                    className={`text-lg font-medium ${theme === "dark" ? "text-white" : "text-black"
+                      }`}
                   >
                     Total Tasks: {summaryData.tasks.total}
                   </p>
@@ -804,9 +787,8 @@ const ProjectManagerDashboard = () => {
                 <div className="flex items-center gap-3 mb-4">
                   <BsGraphUp className="text-2xl text-green-500" />
                   <h2
-                    className={`text-xl font-semibold ${
-                      theme === "dark" ? "text-white" : "text-black"
-                    }`}
+                    className={`text-xl font-semibold ${theme === "dark" ? "text-white" : "text-black"
+                      }`}
                   >
                     Developer Performance
                   </h2>
@@ -880,9 +862,8 @@ const ProjectManagerDashboard = () => {
                 <div className="flex items-center gap-3 mb-4">
                   <RxActivityLog className="text-2xl text-indigo-500" />
                   <h2
-                    className={`text-xl font-semibold ${
-                      theme === "dark" ? "text-white" : "text-black"
-                    }`}
+                    className={`text-xl font-semibold ${theme === "dark" ? "text-white" : "text-black"
+                      }`}
                   >
                     Recent Activities
                   </h2>
@@ -897,9 +878,8 @@ const ProjectManagerDashboard = () => {
                         <div className="w-2 h-2 mt-2 rounded-full bg-blue-500"></div>
                         <div className="flex-1">
                           <p
-                            className={`${
-                              theme === "dark" ? "text-white" : "text-black"
-                            } font-medium`}
+                            className={`${theme === "dark" ? "text-white" : "text-black"
+                              } font-medium`}
                           >
                             <span className="font-semibold">
                               {activity.user}
@@ -907,20 +887,18 @@ const ProjectManagerDashboard = () => {
                             {activity.action}
                           </p>
                           <p
-                            className={`${
-                              theme === "dark"
+                            className={`${theme === "dark"
                                 ? "text-gray-300"
                                 : "text-gray-600"
-                            } text-sm`}
+                              } text-sm`}
                           >
                             {activity.formattedDetails || activity.details}
                           </p>
                           <p
-                            className={`${
-                              theme === "dark"
+                            className={`${theme === "dark"
                                 ? "text-gray-400"
                                 : "text-gray-500"
-                            } text-xs mt-1`}
+                              } text-xs mt-1`}
                           >
                             {formatTimestamp(activity.timestamp)}
                           </p>
@@ -930,9 +908,8 @@ const ProjectManagerDashboard = () => {
                   ) : (
                     <div className="text-center py-6">
                       <p
-                        className={`${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
+                        className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                          }`}
                       >
                         No recent activities
                       </p>
@@ -947,9 +924,8 @@ const ProjectManagerDashboard = () => {
               <div className="flex items-center gap-3 mb-4">
                 <FaProjectDiagram className="text-2xl text-blue-500" />
                 <h2
-                  className={`text-xl font-semibold ${
-                    theme === "dark" ? "text-white" : "text-black"
-                  }`}
+                  className={`text-xl font-semibold ${theme === "dark" ? "text-white" : "text-black"
+                    }`}
                 >
                   Quick Stats
                 </h2>
@@ -957,16 +933,14 @@ const ProjectManagerDashboard = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/20 dark:bg-black/20 p-4 rounded-lg hover:bg-white/30 dark:hover:bg-black/30 transition-all duration-300">
                   <p
-                    className={`${
-                      theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    } text-sm`}
+                    className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      } text-sm`}
                   >
                     Completion Rate
                   </p>
                   <p
-                    className={`${
-                      theme === "dark" ? "text-white" : "text-black"
-                    } text-2xl font-bold`}
+                    className={`${theme === "dark" ? "text-white" : "text-black"
+                      } text-2xl font-bold`}
                   >
                     {completionRate}%
                   </p>
@@ -979,70 +953,61 @@ const ProjectManagerDashboard = () => {
                 </div>
                 <div className="bg-white/20 dark:bg-black/20 p-4 rounded-lg hover:bg-white/30 dark:hover:bg-black/30 transition-all duration-300">
                   <p
-                    className={`${
-                      theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    } text-sm`}
+                    className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      } text-sm`}
                   >
                     Active Projects
                   </p>
                   <p
-                    className={`${
-                      theme === "dark" ? "text-white" : "text-black"
-                    } text-2xl font-bold`}
+                    className={`${theme === "dark" ? "text-white" : "text-black"
+                      } text-2xl font-bold`}
                   >
                     {summaryData.projects.inProgress}
                   </p>
                   <p
-                    className={`${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    } text-xs mt-1`}
+                    className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      } text-xs mt-1`}
                   >
                     Out of {summaryData.projects.total}
                   </p>
                 </div>
                 <div className="bg-white/20 dark:bg-black/20 p-4 rounded-lg hover:bg-white/30 dark:hover:bg-black/30 transition-all duration-300">
                   <p
-                    className={`${
-                      theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    } text-sm`}
+                    className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      } text-sm`}
                   >
                     Team Members
                   </p>
                   <p
-                    className={`${
-                      theme === "dark" ? "text-white" : "text-black"
-                    } text-2xl font-bold`}
+                    className={`${theme === "dark" ? "text-white" : "text-black"
+                      } text-2xl font-bold`}
                   >
                     {summaryData.users.developer +
                       summaryData.users.projectManager}
                   </p>
                   <p
-                    className={`${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    } text-xs mt-1`}
+                    className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      } text-xs mt-1`}
                   >
                     Active developers & managers
                   </p>
                 </div>
                 <div className="bg-white/20 dark:bg-black/20 p-4 rounded-lg hover:bg-white/30 dark:hover:bg-black/30 transition-all duration-300">
                   <p
-                    className={`${
-                      theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    } text-sm`}
+                    className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      } text-sm`}
                   >
                     Pending Tasks
                   </p>
                   <p
-                    className={`${
-                      theme === "dark" ? "text-white" : "text-black"
-                    } text-2xl font-bold`}
+                    className={`${theme === "dark" ? "text-white" : "text-black"
+                      } text-2xl font-bold`}
                   >
                     {summaryData.tasks.pending}
                   </p>
                   <p
-                    className={`${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    } text-xs mt-1`}
+                    className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      } text-xs mt-1`}
                   >
                     Tasks in pending status
                   </p>

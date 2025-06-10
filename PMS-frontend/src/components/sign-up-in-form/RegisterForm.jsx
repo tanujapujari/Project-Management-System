@@ -124,6 +124,8 @@ const RegisterForm = () => {
             <div className="relative">
               <input
                 type="text"
+                id="register-username"
+                name="username"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
                 placeholder="Choose your Username"
@@ -139,6 +141,8 @@ const RegisterForm = () => {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                id="register-password"
+                name="password"
                 value={userPassword}
                 onChange={(e) => setUserPassword(e.target.value)}
                 placeholder="Enter your Password"
@@ -157,6 +161,8 @@ const RegisterForm = () => {
             <div className="relative">
               <input
                 type="email"
+                id="register-email"
+                name="email"
                 value={userEmail}
                 onChange={(e) => setUserEmail(e.target.value)}
                 placeholder="Enter your Email Address"

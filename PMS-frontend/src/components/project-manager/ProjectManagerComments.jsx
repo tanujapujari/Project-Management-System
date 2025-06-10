@@ -348,16 +348,33 @@ const ProjectManagerComments = () => {
   const handleUpdateComment = async () => {
     try {
       const token = localStorage.getItem("token");
+      
+      // Format the date as dd-mm-yyyy
+      let createdAt;
+      try {
+        const date = new Date();
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        createdAt = `${day}-${month}-${year}`;
+      } catch (error) {
+        console.error("Date formatting error:", error);
+        toast.error("Invalid date format");
+        return;
+      }
+
       const payload = {
-        commentContent: editContent.commentContent,
-        taskItemId: editContent.taskItemId
-          ? Number(editContent.taskItemId)
-          : null,
+        commentContent: editContent.commentContent.trim(),
+        taskItemId: editContent.taskItemId ? Number(editContent.taskItemId) : null,
         projectId: editContent.projectId ? Number(editContent.projectId) : null,
         commentedById: Number(editContent.commentedById),
+        commentedByName: userName,
+        createdAt: createdAt
       };
 
-      await axios.put(
+      console.log("Updating comment with payload:", payload);
+
+      const response = await axios.put(
         `http://localhost:5294/Comment/update/${editCommentId}`,
         payload,
         {
@@ -368,13 +385,16 @@ const ProjectManagerComments = () => {
         }
       );
 
-      const response = await axios.get(
+      console.log("Update response:", response.data);
+
+      // Refresh comments after update
+      const commentsResponse = await axios.get(
         "http://localhost:5294/Comment/get-all",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setComments(response.data);
+      setComments(commentsResponse.data);
 
       setEditCommentId(null);
       setEditContent({
@@ -386,7 +406,16 @@ const ProjectManagerComments = () => {
       toast.success("Comment updated successfully!");
     } catch (error) {
       console.error("Update comment error:", error);
-      toast.error("Failed to update comment: " + error.message);
+      if (error.response) {
+        console.error("Error response:", error.response.data);
+        toast.error("Failed to update comment: " + (error.response.data || error.message));
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        toast.error("No response from server. Please check your connection.");
+      } else {
+        console.error("Error setting up request:", error.message);
+        toast.error("Failed to update comment: " + error.message);
+      }
     }
   };
 

@@ -162,6 +162,8 @@ const LoginForm = () => {
             <div className="relative">
               <input
                 type="email"
+                id="login-email"
+                name="email"
                 placeholder="Enter your Email Address"
                 value={userEmail}
                 onChange={(e) => setUserEmail(e.target.value)}
@@ -177,6 +179,8 @@ const LoginForm = () => {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                id="login-password"
+                name="password"
                 placeholder="Enter your Password"
                 value={userPassword}
                 onChange={(e) => setUserPassword(e.target.value)}
@@ -263,7 +267,7 @@ const LoginForm = () => {
           </form>
         </div>
         <div
-          className={`bg-[url(/src/assets/login-register-bg.png)] hidden md:flex bg-cover ${ImgHeightClass} rounded-2xl rounded-l-none bg-no-repeat bg-center justify-center items-center`}
+          className={`bg-[url(/src/assets/login-register-bg.png)] hidden md:flex bg-cover ${ImgHeightClass} rounded-2xl rounded-l-none bg-no-repeat bg-center items-center`}
         >
           <h1 className="text-5xl font-bold font-serif text-center bg-white text-transparent bg-clip-text animate-pulse drop-shadow-2xl">
             Welcome Back to Project Management System

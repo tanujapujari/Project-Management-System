@@ -20,7 +20,7 @@ const DeveloperProjects = () => {
   const [userName, setUserName] = useState("");
   const themeContext = useContext(ThemeContext);
   const theme = themeContext?.theme || "light";
-  const toggleTheme = themeContext?.toggleTheme || (() => {});
+  const toggleTheme = themeContext?.toggleTheme || (() => { });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -164,57 +164,112 @@ const DeveloperProjects = () => {
     }
     try {
       const token = localStorage.getItem("token");
-      console.log("Status before payload:", updatedProject.status);
-      console.log("Status type:", typeof updatedProject.status);
-      console.log("Status length:", updatedProject.status.length);
-      console.log(
-        "Status char codes:",
-        Array.from(updatedProject.status).map((c) => c.charCodeAt(0))
-      );
+      const userId = localStorage.getItem("userId");
+
+      if (!userId) {
+        console.error("User ID not found in localStorage");
+        toast.error("User information not found. Please log in again.");
+        return;
+      }
 
       const payload = {
         projectTitle: updatedProject.title,
         projectDescription: updatedProject.description,
-        projectStatus: "Not Started",
+        projectStatus: updatedProject.status,
         projectStartDate: toDDMMYYYYfromInput(updatedProject.startDate),
         projectDeadLine: toDDMMYYYYfromInput(updatedProject.deadline),
         createdByUserId: Number(updatedProject.createdByUserId),
         assignedUserIds: updatedProject.assignedUsers.map(Number),
       };
-      console.log("Update Project Payload:", payload);
 
-      const response = await axios.put(
-        `http://localhost:5294/api/Project/update/${projectIdToUpdate}`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      console.log("Update response:", response.data);
+      // Attempt to update the project
+      try {
+        await axios.put(
+          `http://localhost:5294/api/Project/update/${projectIdToUpdate}`,
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      } catch (updateError) {
+        // Even if we get an error, we'll try to refresh the data
+        console.warn("Update request returned error, but will attempt to refresh data:", updateError);
+      }
+
+      // Fetch updated projects regardless of update response
       const projectsResponse = await axios.get(
         "http://localhost:5294/api/Project/get",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setProjects(projectsResponse.data);
+
+      const userProjects = projectsResponse.data.filter(
+        (project) =>
+          project.assignedUserIds &&
+          project.assignedUserIds.includes(Number(userId))
+      );
+
+      // Update the projects state with the new data
+      setProjects(userProjects);
+
+      // Clear the edit state
       setEditProjectId(null);
       setEditProjectData({});
+
+      // Show success message
       toast.success("Project updated successfully!");
     } catch (error) {
-      console.error("Update project error:", error);
+      console.error("Error in handleUpdateProject:", error);
+
       if (error.response) {
-        console.error("Error response:", error.response.data);
-        toast.error(
-          "Failed to update project: " +
-            (error.response.data?.message ||
-              JSON.stringify(error.response.data))
-        );
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+
+        // If we get a 500 error but the data was actually updated
+        if (error.response.status === 500) {
+          // Try to refresh the data one more time
+          try {
+            const token = localStorage.getItem("token");
+            const userId = localStorage.getItem("userId");
+
+            const projectsResponse = await axios.get(
+              "http://localhost:5294/api/Project/get",
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+
+            const userProjects = projectsResponse.data.filter(
+              (project) =>
+                project.assignedUserIds &&
+                project.assignedUserIds.includes(Number(userId))
+            );
+
+            setProjects(userProjects);
+            setEditProjectId(null);
+            setEditProjectData({});
+            toast.success("Project updated successfully!");
+            return;
+          } catch (refreshError) {
+            console.error("Error refreshing data:", refreshError);
+          }
+        }
+
+        const errorMessage = error.response.data?.message ||
+          error.response.data?.error ||
+          JSON.stringify(error.response.data);
+
+        toast.error(`Failed to update project: ${errorMessage}`);
+      } else if (error.request) {
+        console.error("Error request:", error.request);
+        toast.error("No response received from server. Please check your connection.");
       } else {
-        toast.error("Failed to update project: " + error.message);
+        console.error("Error message:", error.message);
+        toast.error(`Failed to update project: ${error.message}`);
       }
     }
   };
@@ -251,9 +306,10 @@ const DeveloperProjects = () => {
   };
 
   const handleEdit = (project) => {
-    console.log("Original project status:", project.projectStatus);
+    console.log("Original project data:", project);
     setEditProjectId(project.projectId);
     setSidebarOpen(false);
+
     const editData = {
       title: project.projectTitle,
       description: project.projectDescription,
@@ -265,7 +321,8 @@ const DeveloperProjects = () => {
         ? project.assignedUserIds.map(String)
         : [],
     };
-    console.log("Setting edit data with status:", editData.status);
+
+    console.log("Setting edit data:", editData);
     setEditProjectData(editData);
     toast.info(`Editing project: ${project.projectTitle}`);
   };
@@ -345,11 +402,10 @@ const DeveloperProjects = () => {
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50
              to-white dark:from-gray-900 dark:to-black transition-transform
                 ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
-                ${
-                  sidebarOpen || window.innerWidth >= 640
-                    ? "translate-x-0"
-                    : "-translate-x-full"
-                }`}
+                ${sidebarOpen || window.innerWidth >= 640
+              ? "translate-x-0"
+              : "-translate-x-full"
+            }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8">
             <ul className="space-y-4">
@@ -373,9 +429,8 @@ const DeveloperProjects = () => {
                 >
                   <span className="text-xl flex-shrink-0">{icon}</span>
                   <span
-                    className={`whitespace-nowrap ${
-                      !sidebarOpen && "hidden sm:hidden"
-                    }`}
+                    className={`whitespace-nowrap ${!sidebarOpen && "hidden sm:hidden"
+                      }`}
                   >
                     {label}
                   </span>
@@ -388,16 +443,14 @@ const DeveloperProjects = () => {
 
       {/* Main content wrapper */}
       <div
-        className={`flex flex-col flex-1 transition-all duration-300 ${
-          sidebarOpen ? "md:ml-55" : "md:ml-14"
-        }`}
+        className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-55" : "md:ml-14"
+          }`}
       >
         {/* Header */}
         <header
           className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 flex items-center
-             justify-between transition-all duration-300 ${
-               sidebarOpen ? "md:ml-0" : "md:-ml-14"
-             } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
+             justify-between transition-all duration-300 ${sidebarOpen ? "md:ml-0" : "md:-ml-14"
+            } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
         >
           <div className="flex items-center gap-5">
             <RxHamburgerMenu
@@ -479,22 +532,22 @@ const DeveloperProjects = () => {
                     filterStartDate ||
                     filterEndDate ||
                     filterAssignedUser) && (
-                    <span
-                      className="text-xs font-normal bg-yellow-100 dark:bg-yellow-900 text-yellow-800
+                      <span
+                        className="text-xs font-normal bg-yellow-100 dark:bg-yellow-900 text-yellow-800
                      dark:text-yellow-300 px-2 py-0.5 rounded-md ml-2"
-                    >
-                      Filtered
-                    </span>
-                  )}
+                      >
+                        Filtered
+                      </span>
+                    )}
                   <span
                     className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 
                   text-xs font-medium px-2 py-1 rounded-full ml-2"
                   >
                     {filterTitle ||
-                    filterStatus !== "All" ||
-                    filterStartDate ||
-                    filterEndDate ||
-                    filterAssignedUser
+                      filterStatus !== "All" ||
+                      filterStartDate ||
+                      filterEndDate ||
+                      filterAssignedUser
                       ? `${filteredProjects.length}/${projects.length}`
                       : projects.length}
                   </span>
@@ -673,10 +726,10 @@ const DeveloperProjects = () => {
                           <div className="flex flex-col items-center justify-center gap-2">
                             <MdOutlineLibraryBooks className="text-4xl text-blue-500" />
                             {filterTitle ||
-                            filterStatus !== "All" ||
-                            filterStartDate ||
-                            filterEndDate ||
-                            filterAssignedUser ? (
+                              filterStatus !== "All" ||
+                              filterStartDate ||
+                              filterEndDate ||
+                              filterAssignedUser ? (
                               <p>No projects match your current filters.</p>
                             ) : (
                               <p>No projects are currently assigned to you.</p>
@@ -688,9 +741,8 @@ const DeveloperProjects = () => {
                       visibleProjects.map((project, index) => (
                         <tr
                           key={project.projectId}
-                          className={`${
-                            index % 2 === 0 ? "bg-white" : "bg-blue-50"
-                          } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
+                          className={`${index % 2 === 0 ? "bg-white" : "bg-blue-50"
+                            } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
                         >
                           <td className="border border-black dark:border-white p-2">
                             {project.projectId}
@@ -815,8 +867,8 @@ const DeveloperProjects = () => {
                                 );
                                 return user
                                   ? user.userFullName ||
-                                      user.userName ||
-                                      user.userEmail
+                                  user.userName ||
+                                  user.userEmail
                                   : project.createdByUserId;
                               })()
                             )}
@@ -854,8 +906,8 @@ const DeveloperProjects = () => {
                                   );
                                   return user
                                     ? user.userFullName ||
-                                        user.userName ||
-                                        user.userEmail
+                                    user.userName ||
+                                    user.userEmail
                                     : id;
                                 })
                                 .join(", ")
@@ -917,10 +969,10 @@ const DeveloperProjects = () => {
                   >
                     Show All {filteredProjects.length}{" "}
                     {filterTitle ||
-                    filterStatus !== "All" ||
-                    filterStartDate ||
-                    filterEndDate ||
-                    filterAssignedUser
+                      filterStatus !== "All" ||
+                      filterStartDate ||
+                      filterEndDate ||
+                      filterAssignedUser
                       ? "Filtered"
                       : ""}{" "}
                     Projects

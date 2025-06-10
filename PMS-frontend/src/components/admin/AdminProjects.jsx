@@ -22,7 +22,7 @@ const AdminProjects = () => {
   const navigate = useNavigate();
   const themeContext = useContext(ThemeContext);
   const theme = themeContext?.theme || "light";
-  const toggleTheme = themeContext?.toggleTheme || (() => {});
+  const toggleTheme = themeContext?.toggleTheme || (() => { });
 
   useEffect(() => {
     const storedRole = localStorage.getItem("userRole");
@@ -123,6 +123,31 @@ const AdminProjects = () => {
     return `${yyyy}-${mm}-${dd}`;
   }
 
+  const handleEdit = (project) => {
+    console.log("Original project:", project);
+    setEditProjectId(project.projectId);
+    setSidebarOpen(false);
+
+    // Convert dd-mm-yyyy to yyyy-mm-dd for the form
+    const formatDateForInput = (dateStr) => {
+      if (!dateStr) return "";
+      const [day, month, year] = dateStr.split("-");
+      return `${year}-${month}-${day}`;
+    };
+
+    const editData = {
+      title: project.projectTitle,
+      description: project.projectDescription,
+      status: project.projectStatus,
+      startDate: formatDateForInput(project.projectStartDate),
+      deadline: formatDateForInput(project.projectDeadLine),
+      createdByUserId: project.createdByUserId,
+      assignedUsers: project.assignedUserIds || []
+    };
+    console.log("Setting edit data:", editData);
+    setEditProjectData(editData);
+  };
+
   const handleUpdateProject = async (projectIdToUpdate, updatedProject) => {
     if (
       !updatedProject.title ||
@@ -139,27 +164,54 @@ const AdminProjects = () => {
       );
       return;
     }
+
     try {
       const token = localStorage.getItem("token");
-      console.log("Status before payload:", updatedProject.status);
-      console.log("Status type:", typeof updatedProject.status);
-      console.log("Status length:", updatedProject.status.length);
-      console.log(
-        "Status char codes:",
-        Array.from(updatedProject.status).map((c) => c.charCodeAt(0))
-      );
+
+      // Format dates to dd-mm-yyyy
+      const formatDate = (dateStr) => {
+        if (!dateStr) return "";
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+          throw new Error("Invalid date format");
+        }
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      };
+
+      const startDate = formatDate(updatedProject.startDate);
+      const deadline = formatDate(updatedProject.deadline);
+
+      // Validate dates
+      const startDateObj = new Date(updatedProject.startDate);
+      const deadlineObj = new Date(updatedProject.deadline);
+
+      if (deadlineObj <= startDateObj) {
+        toast.error("Project deadline must be after start date");
+        return;
+      }
+
+      // Ensure assignedUsers is an array of numbers
+      const assignedUserIds = Array.isArray(updatedProject.assignedUsers)
+        ? updatedProject.assignedUsers.map(id => Number(id))
+        : [Number(updatedProject.assignedUsers)];
 
       const payload = {
-        projectTitle: updatedProject.title,
-        projectDescription: updatedProject.description,
+        projectId: Number(projectIdToUpdate),
+        projectTitle: updatedProject.title.trim(),
+        projectDescription: updatedProject.description.trim(),
         projectStatus: updatedProject.status,
-        projectStartDate: toDDMMYYYYfromInput(updatedProject.startDate),
-        projectDeadLine: toDDMMYYYYfromInput(updatedProject.deadline),
+        projectStartDate: startDate,
+        projectDeadLine: deadline,
         createdByUserId: Number(updatedProject.createdByUserId),
-        assignedUserIds: updatedProject.assignedUsers.map(Number),
+        assignedUserIds: assignedUserIds
       };
+
       console.log("Update Project Payload:", payload);
 
+      // First update the project
       const response = await axios.put(
         `http://localhost:5294/api/Project/update/${projectIdToUpdate}`,
         payload,
@@ -170,29 +222,131 @@ const AdminProjects = () => {
           },
         }
       );
+
       console.log("Update response:", response.data);
 
+      // Show success message
+      toast.success("Project updated successfully!");
+
+      // Reset edit mode immediately
+      setEditProjectId(null);
+      setEditProjectData({});
+
+      // Fetch updated data
       const projectsResponse = await axios.get(
         "http://localhost:5294/api/Project/get",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
+      // Update the projects list with fresh data
       setProjects(projectsResponse.data);
-      setEditProjectId(null);
-      setEditProjectData({});
+
     } catch (error) {
       console.error("Update project error:", error);
       if (error.response) {
         console.error("Error response:", error.response.data);
-        toast.error(
-          "Failed to update project: " +
-            (error.response.data?.message ||
-              JSON.stringify(error.response.data))
-        );
+        const errorMessage = error.response.data?.errors
+          ? Object.values(error.response.data.errors).flat().join(", ")
+          : error.response.data?.message || "Failed to update project";
+        toast.error(errorMessage);
       } else {
         toast.error("Failed to update project: " + error.message);
       }
+    }
+  };
+
+  // Add this function to handle input changes in edit mode
+  const handleEditInputChange = (field, value) => {
+    setEditProjectData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Update the table cell rendering for edit mode
+  const renderEditCell = (field, value, type = "text") => {
+    switch (type) {
+      case "text":
+        return (
+          <input
+            type="text"
+            value={value || ""}
+            onChange={(e) => handleEditInputChange(field, e.target.value)}
+            className="border p-1 rounded w-full text-black"
+          />
+        );
+      case "textarea":
+        return (
+          <textarea
+            value={value || ""}
+            onChange={(e) => handleEditInputChange(field, e.target.value)}
+            className="border p-1 rounded w-full text-black"
+          />
+        );
+      case "date":
+        return (
+          <input
+            type="date"
+            value={value || ""}
+            onChange={(e) => handleEditInputChange(field, e.target.value)}
+            className="border p-1 rounded w-full text-black"
+          />
+        );
+      case "select":
+        return (
+          <select
+            value={value || ""}
+            onChange={(e) => handleEditInputChange(field, e.target.value)}
+            className="border p-1 rounded w-full text-black"
+          >
+            <option value="Not Started">Not Started</option>
+            <option value="Upcoming">Upcoming</option>
+            <option value="In Progress">In Progress</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        );
+      case "userSelect":
+        return (
+          <select
+            value={value || ""}
+            onChange={(e) => handleEditInputChange(field, e.target.value)}
+            className="border p-1 rounded w-full text-black"
+          >
+            <option value="">Select User</option>
+            {users.map((user) => (
+              <option key={user.userId} value={user.userId}>
+                {user.userFullName || user.userName || user.userEmail}
+              </option>
+            ))}
+          </select>
+        );
+      case "multiSelect":
+        return (
+          <select
+            multiple
+            value={value || []}
+            onChange={(e) => {
+              const selected = Array.from(
+                e.target.selectedOptions,
+                (option) => option.value
+              );
+              handleEditInputChange(field, selected);
+            }}
+            className="border p-1 rounded w-full text-black"
+          >
+            {users.map((user) => (
+              <option key={user.userId} value={user.userId}>
+                {user.userFullName || user.userName || user.userEmail}
+              </option>
+            ))}
+          </select>
+        );
+      default:
+        return value;
     }
   };
 
@@ -213,25 +367,6 @@ const AdminProjects = () => {
         console.error("Failed to delete project:", error);
       }
     }
-  };
-
-  const handleEdit = (project) => {
-    console.log("Original project status:", project.projectStatus);
-    setEditProjectId(project.projectId);
-    setSidebarOpen(false);
-    const editData = {
-      title: project.projectTitle,
-      description: project.projectDescription,
-      status: project.projectStatus,
-      startDate: toInputDate(project.projectStartDate),
-      deadline: toInputDate(project.projectDeadLine),
-      createdByUserId: project.createdByUserId,
-      assignedUsers: project.assignedUserIds
-        ? project.assignedUserIds.map(String)
-        : [],
-    };
-    console.log("Setting edit data with status:", editData.status);
-    setEditProjectData(editData);
   };
 
   const clearFilters = () => {
@@ -471,6 +606,57 @@ const AdminProjects = () => {
   const filteredCount = filteredProjects.length;
   const totalCount = projects.length;
 
+  // Update the table row rendering to use the new renderActionButtons function
+  const renderActionButtons = (project) => {
+    if (editProjectId === project.projectId) {
+      return (
+        <div className="flex flex-row gap-x-2">
+          <button
+            onClick={() => {
+              handleUpdateProject(project.projectId, editProjectData);
+            }}
+            className="bg-green-500 text-white p-1 rounded hover:bg-green-600 transition-colors duration-200"
+            aria-label="Save project changes"
+            title="Save project changes"
+          >
+            Save
+          </button>
+          <button
+            onClick={() => {
+              setEditProjectId(null);
+              setEditProjectData({});
+            }}
+            className="bg-gray-400 text-white p-1 rounded hover:bg-gray-500 transition-colors duration-200"
+            aria-label="Cancel project edit"
+            title="Cancel project edit"
+          >
+            Cancel
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div className="flex flex-row gap-x-2">
+        <button
+          onClick={() => handleEdit(project)}
+          className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600 transition-colors duration-200"
+          aria-label={`Edit project ${project.projectTitle}`}
+          title={`Edit project ${project.projectTitle}`}
+        >
+          Edit
+        </button>
+        <button
+          onClick={() => handleDeleteProject(project.projectId)}
+          className="bg-red-500 text-white p-1 rounded hover:bg-red-600 transition-colors duration-200"
+          aria-label={`Delete project ${project.projectTitle}`}
+          title={`Delete project ${project.projectTitle}`}
+        >
+          Delete
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen flex">
       <ToastContainer
@@ -496,18 +682,16 @@ const AdminProjects = () => {
         <aside
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-black transition-transform
               ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
-              ${
-                sidebarOpen || window.innerWidth >= 640
-                  ? "translate-x-0"
-                  : "-translate-x-full"
-              }`}
+              ${sidebarOpen || window.innerWidth >= 640
+              ? "translate-x-0"
+              : "-translate-x-full"
+            }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8">
             <ul className="space-y-4">
               <li
-                className={`flex items-center gap-2 p-2 justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-lg -mt-5 mb-10 ${
-                  !sidebarOpen && "sm:hidden"
-                }`}
+                className={`flex items-center gap-2 p-2 justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-lg -mt-5 mb-10 ${!sidebarOpen && "sm:hidden"
+                  }`}
               >
                 PMS
               </li>
@@ -522,9 +706,8 @@ const AdminProjects = () => {
                 >
                   <span className="text-xl flex-shrink-0">{icon}</span>
                   <span
-                    className={`whitespace-nowrap ${
-                      !sidebarOpen && "hidden sm:hidden"
-                    }`}
+                    className={`whitespace-nowrap ${!sidebarOpen && "hidden sm:hidden"
+                      }`}
                   >
                     {label}
                   </span>
@@ -537,15 +720,13 @@ const AdminProjects = () => {
 
       {/* Main content wrapper */}
       <div
-        className={`flex flex-col flex-1 transition-all duration-300 ${
-          sidebarOpen ? "md:ml-55" : "md:ml-14"
-        }`}
+        className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-55" : "md:ml-14"
+          }`}
       >
         {/* Header */}
         <header
-          className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 flex items-center justify-between transition-all duration-300 ${
-            sidebarOpen ? "md:ml-0" : "md:-ml-14"
-          } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
+          className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 flex items-center justify-between transition-all duration-300 ${sidebarOpen ? "md:ml-0" : "md:-ml-14"
+            } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
         >
           <div className="flex items-center gap-5">
             <RxHamburgerMenu
@@ -559,20 +740,29 @@ const AdminProjects = () => {
               className="hover:bg-gradient-to-r hover:from-blue-400 hover:to-purple-400 hover:text-white p-3 rounded-full transition-all"
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
+              title="Toggle dark mode"
             >
               {theme === "dark" ? (
-                <MdOutlineLightMode size={18} />
+                <MdOutlineLightMode size={18} aria-hidden="true" />
               ) : (
-                <MdOutlineDarkMode size={18} />
+                <MdOutlineDarkMode size={18} aria-hidden="true" />
               )}
             </button>
 
             <div
               className="flex items-center gap-2 cursor-pointer p-2 rounded-lg transition-all"
               onClick={() => setDropdownOpen(!dropdownOpen)}
+              role="button"
+              tabIndex={0}
+              aria-label="User menu"
+              title="User menu"
             >
-              <button className="bg-gradient-to-r from-blue-400 to-purple-400 text-white p-3 rounded-full">
-                <FaUser size={18} />
+              <button
+                className="bg-gradient-to-r from-blue-400 to-purple-400 text-white p-3 rounded-full"
+                aria-label="User profile"
+                title="User profile"
+              >
+                <FaUser size={18} aria-hidden="true" />
               </button>
               <div className="flex flex-col">
                 <span className="font-semibold dark:text-white text-sm">
@@ -583,17 +773,23 @@ const AdminProjects = () => {
                 </span>
               </div>
               <FaAngleDown
-                className={`transition-transform duration-200 ${
-                  dropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""
+                  }`}
+                aria-hidden="true"
               />
             </div>
 
             {dropdownOpen && (
-              <div className="absolute right-0 top-14 bg-white dark:bg-black shadow-md rounded-md p-2 w-32">
+              <div
+                className="absolute right-0 top-14 bg-white dark:bg-black shadow-md rounded-md p-2 w-32"
+                role="menu"
+                aria-label="User menu options"
+              >
                 <button
                   className="w-full text-left px-2 py-1 hover:bg-gradient-to-r hover:from-blue-400 hover:to-purple-400 hover:text-white rounded-md text-sm transition-all"
                   onClick={handleLogout}
+                  aria-label="Logout"
+                  title="Logout"
                 >
                   Logout
                 </button>
@@ -616,6 +812,8 @@ const AdminProjects = () => {
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-400 to-purple-400 text-white px-4 py-2 rounded-lg shadow-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 font-medium"
+                aria-label={showFilters ? "Hide filters" : "Show filters"}
+                title={showFilters ? "Hide filters" : "Show filters"}
               >
                 {showFilters ? "Hide Filters" : "Show Filters"}
               </button>
@@ -623,15 +821,17 @@ const AdminProjects = () => {
               <button
                 onClick={() => setShowCreateForm((v) => !v)}
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg shadow-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium"
+                aria-label={showCreateForm ? "Close create form" : "Create new project"}
+                title={showCreateForm ? "Close create form" : "Create new project"}
               >
                 {showCreateForm ? (
                   <>
-                    <span className="text-lg">×</span>
+                    <span className="text-lg" aria-hidden="true">×</span>
                     Close
                   </>
                 ) : (
                   <>
-                    <span className="text-lg">+</span>
+                    <span className="text-lg" aria-hidden="true">+</span>
                     Create Project
                   </>
                 )}
@@ -750,6 +950,8 @@ const AdminProjects = () => {
                   </label>
                   <input
                     type="text"
+                    id="project-title"
+                    name="title"
                     value={newProjectData.title}
                     onChange={(e) =>
                       setNewProjectData((prev) => ({
@@ -806,6 +1008,8 @@ const AdminProjects = () => {
                   </label>
                   <input
                     type="date"
+                    id="project-start-date"
+                    name="startDate"
                     value={newProjectData.startDate}
                     onChange={(e) =>
                       setNewProjectData((prev) => ({
@@ -823,6 +1027,8 @@ const AdminProjects = () => {
                   </label>
                   <input
                     type="date"
+                    id="project-deadline"
+                    name="deadline"
                     value={newProjectData.deadline}
                     onChange={(e) =>
                       setNewProjectData((prev) => ({
@@ -934,164 +1140,64 @@ const AdminProjects = () => {
                     {visibleProjects.map((project, index) => (
                       <tr
                         key={project.projectId}
-                        className={`${
-                          index % 2 === 0 ? "bg-white" : "bg-blue-50"
-                        } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
+                        className={`${index % 2 === 0 ? "bg-white" : "bg-blue-50"
+                          } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
                       >
                         <td className="border border-black dark:border-white p-2">
                           {project.projectId}
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           {editProjectId === project.projectId ? (
-                            <input
-                              type="text"
-                              value={editProjectData.title || ""}
-                              onChange={(e) =>
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  title: e.target.value,
-                                }))
-                              }
-                              className="border p-1 rounded w-full text-black"
-                            />
+                            renderEditCell("title", editProjectData.title)
                           ) : (
                             project.projectTitle
                           )}
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           {editProjectId === project.projectId ? (
-                            <textarea
-                              value={editProjectData.description || ""}
-                              onChange={(e) =>
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  description: e.target.value,
-                                }))
-                              }
-                              className="border p-1 rounded w-full text-black"
-                            />
+                            renderEditCell("description", editProjectData.description, "textarea")
                           ) : (
                             project.projectDescription
                           )}
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           {editProjectId === project.projectId ? (
-                            <select
-                              value={editProjectData.status || ""}
-                              onChange={(e) =>
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  status: e.target.value,
-                                }))
-                              }
-                              className="border p-1 rounded w-full text-black"
-                            >
-                              <option value="Not Started">Not Started</option>
-                              <option value="Upcoming">Upcoming</option>
-                              <option value="In Progress">In Progress</option>
-                              <option value="On Hold">On Hold</option>
-                              <option value="Completed">Completed</option>
-                              <option value="Cancelled">Cancelled</option>
-                            </select>
+                            renderEditCell("status", editProjectData.status, "select")
                           ) : (
                             project.projectStatus
                           )}
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           {editProjectId === project.projectId ? (
-                            <input
-                              type="date"
-                              value={editProjectData.startDate || ""}
-                              onChange={(e) =>
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  startDate: e.target.value,
-                                }))
-                              }
-                              className="border p-1 rounded w-full text-black"
-                            />
+                            renderEditCell("startDate", editProjectData.startDate, "date")
                           ) : (
                             project.projectStartDate
                           )}
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           {editProjectId === project.projectId ? (
-                            <input
-                              type="date"
-                              value={editProjectData.deadline || ""}
-                              onChange={(e) =>
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  deadline: e.target.value,
-                                }))
-                              }
-                              className="border p-1 rounded w-full text-black"
-                            />
+                            renderEditCell("deadline", editProjectData.deadline, "date")
                           ) : (
                             project.projectDeadLine
                           )}
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           {editProjectId === project.projectId ? (
-                            <select
-                              value={editProjectData.createdByUserId || ""}
-                              onChange={(e) =>
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  createdByUserId: e.target.value,
-                                }))
-                              }
-                              className="border p-1 rounded w-full text-black"
-                            >
-                              <option value="">Select User</option>
-                              {users.map((user) => (
-                                <option key={user.userId} value={user.userId}>
-                                  {user.userFullName ||
-                                    user.userName ||
-                                    user.userEmail}
-                                </option>
-                              ))}
-                            </select>
+                            renderEditCell("createdByUserId", editProjectData.createdByUserId, "userSelect")
                           ) : (
                             (() => {
                               const user = users.find(
-                                (u) =>
-                                  String(u.userId) ===
-                                  String(project.createdByUserId)
+                                (u) => String(u.userId) === String(project.createdByUserId)
                               );
                               return user
-                                ? user.userFullName ||
-                                    user.userName ||
-                                    user.userEmail
+                                ? user.userFullName || user.userName || user.userEmail
                                 : project.createdByUserId;
                             })()
                           )}
                         </td>
-                        <td className="border border-black dark:border-white p-2 ">
+                        <td className="border border-black dark:border-white p-2">
                           {editProjectId === project.projectId ? (
-                            <select
-                              multiple
-                              value={editProjectData.assignedUsers || []}
-                              onChange={(e) => {
-                                const selected = Array.from(
-                                  e.target.selectedOptions,
-                                  (option) => option.value
-                                );
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  assignedUsers: selected,
-                                }));
-                              }}
-                              className="border p-1 rounded w-full text-black"
-                            >
-                              {users.map((user) => (
-                                <option key={user.userId} value={user.userId}>
-                                  {user.userFullName ||
-                                    user.userName ||
-                                    user.userEmail}
-                                </option>
-                              ))}
-                            </select>
+                            renderEditCell("assignedUsers", editProjectData.assignedUsers, "multiSelect")
                           ) : (
                             (project.assignedUserIds || [])
                               .map((id) => {
@@ -1099,55 +1205,14 @@ const AdminProjects = () => {
                                   (u) => String(u.userId) === String(id)
                                 );
                                 return user
-                                  ? user.userFullName ||
-                                      user.userName ||
-                                      user.userEmail
+                                  ? user.userFullName || user.userName || user.userEmail
                                   : id;
                               })
                               .join(", ")
                           )}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          <div className="flex flex-row gap-x-2">
-                            {editProjectId === project.projectId ? (
-                              <>
-                                <button
-                                  onClick={() =>
-                                    handleUpdateProject(
-                                      project.projectId,
-                                      editProjectData
-                                    )
-                                  }
-                                  className="bg-green-500 text-white p-1 rounded hover:bg-green-600"
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  onClick={() => setEditProjectId(null)}
-                                  className="bg-gray-400 text-white p-1 rounded hover:bg-gray-500"
-                                >
-                                  Cancel
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  onClick={() => handleEdit(project)}
-                                  className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleDeleteProject(project.projectId)
-                                  }
-                                  className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
-                                >
-                                  Delete
-                                </button>
-                              </>
-                            )}
-                          </div>
+                          {renderActionButtons(project)}
                         </td>
                       </tr>
                     ))}
@@ -1156,10 +1221,10 @@ const AdminProjects = () => {
                 <div className="mt-4 flex flex-col sm:flex-row justify-between items-center">
                   <div className="text-gray-600 dark:text-gray-300 mb-2 sm:mb-0">
                     {filterStatus ||
-                    filterStartDate ||
-                    filterEndDate ||
-                    filterAssignedUser ||
-                    filterTitle ? (
+                      filterStartDate ||
+                      filterEndDate ||
+                      filterAssignedUser ||
+                      filterTitle ? (
                       <span>
                         Showing{" "}
                         <span className="font-semibold">{filteredCount}</span>{" "}

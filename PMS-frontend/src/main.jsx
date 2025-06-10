@@ -54,30 +54,30 @@ const ThemeProvider = ({ children }) => {
   );
 };
 
-let root = null;
+const container = document.getElementById("root");
+const root = createRoot(container);
 
-function render() {
-  const container = document.getElementById("root");
-  if (!root) {
-    root = createRoot(container);
-  }
-
-  root.render(
-    <ErrorBoundary>
-      <StrictMode>
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
-      </StrictMode>
-    </ErrorBoundary>
-  );
-}
-
-render();
+root.render(
+  <ErrorBoundary>
+    <StrictMode>
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
+    </StrictMode>
+  </ErrorBoundary>
+);
 
 if (import.meta.hot) {
   import.meta.hot.accept(() => {
-    render();
+    root.render(
+      <ErrorBoundary>
+        <StrictMode>
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
+        </StrictMode>
+      </ErrorBoundary>
+    );
   });
 }
 

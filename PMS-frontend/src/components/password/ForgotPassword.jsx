@@ -19,17 +19,33 @@ const ForgotPassword = () => {
       setIsLoading(false);
       return;
     }
+
     try {
       const response = await axios.post(
         "http://localhost:5294/api/Password/forgot-password",
-        { userEmail: email }
+        { 
+          userEmail: email.trim(),
+          resetUrl: window.location.origin + "/reset-password"
+        },
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
       );
-      setMessage(response.data);
+
+      if (response.data) {
+        setMessage("Password reset instructions have been sent to your email.");
+      }
     } catch (error) {
       if (error.response) {
-        setError(error.response.data);
+        // Handle specific error messages from the server
+        const errorMessage = error.response.data?.message || error.response.data || "Failed to process request. Please try again.";
+        setError(errorMessage);
+      } else if (error.request) {
+        setError("No response from server. Please check your connection.");
       } else {
-        setError("An unexpected error occurred.");
+        setError("An unexpected error occurred. Please try again.");
       }
     } finally {
       setIsLoading(false);

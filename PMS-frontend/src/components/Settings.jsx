@@ -290,6 +290,8 @@ const Settings = () => {
                     </label>
                     <input
                       type="text"
+                      id="settings-fullName"
+                      name="fullName"
                       value={userProfile.fullName}
                       onChange={(e) =>
                         setUserProfile({
@@ -307,6 +309,8 @@ const Settings = () => {
                     </label>
                     <input
                       type="email"
+                      id="settings-email"
+                      name="email"
                       value={userProfile.email}
                       onChange={(e) =>
                         setUserProfile({
@@ -324,6 +328,8 @@ const Settings = () => {
                     </label>
                     <input
                       type="tel"
+                      id="settings-phone"
+                      name="phone"
                       value={userProfile.phone}
                       onChange={(e) =>
                         setUserProfile({
@@ -341,6 +347,8 @@ const Settings = () => {
                     </label>
                     <input
                       type="text"
+                      id="settings-position"
+                      name="position"
                       value={userProfile.position}
                       onChange={(e) =>
                         setUserProfile({
