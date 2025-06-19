@@ -22,7 +22,6 @@ const DeveloperLogs = () => {
   const [userName, setUserName] = useState("");
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useContext(ThemeContext);
 
@@ -74,9 +73,7 @@ const DeveloperLogs = () => {
       });
 
       setLogs(logsWithUser);
-      setError(null);
     } catch (err) {
-      setError("Failed to fetch activity logs");
       console.error(err);
     } finally {
       setLoading(false);
@@ -285,11 +282,10 @@ const DeveloperLogs = () => {
                 <li
                   key={idx}
                   onClick={() => path && navigate(path)}
-                  className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-all
-                     duration-200 over:bg-gradient-to-r hover:from-blue-400 hover:to-purple-400
-                      hover:text-white  dark:hover:bg-gradient-to-r dark:hover:from-purple-600
-                       dark:hover:to-blue-600 hover:scale-105
-                        ${sidebarOpen ? "w-full" : "w-10 -ml-2"}`}
+                  className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-all duration-200
+                    hover:bg-gradient-to-r hover:from-blue-400 hover:to-purple-400 hover:text-white hover:scale-105
+                    dark:hover:bg-gradient-to-r dark:hover:from-purple-600 dark:hover:to-blue-600
+                    ${sidebarOpen ? "w-full" : "w-10 -ml-2"}`}
                 >
                   <span className="text-xl flex-shrink-0">{icon}</span>
                   <span
@@ -425,15 +421,6 @@ const DeveloperLogs = () => {
                           Loading activity logs...
                         </td>
                       </tr>
-                    ) : error ? (
-                      <tr>
-                        <td
-                          colSpan={4}
-                          className="border border-black dark:border-white p-2 text-center text-red-500"
-                        >
-                          {error}
-                        </td>
-                      </tr>
                     ) : logs.length === 0 ? (
                       <tr>
                         <td
@@ -463,7 +450,7 @@ const DeveloperLogs = () => {
                             </span>
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {log.userId === Number(localStorage.getItem("userId")) ? userName : log.userName}
+                            {String(log.userId) === String(localStorage.getItem('userId')) ? userName : log.userName}
                           </td>
                           <td className="border border-black dark:border-white p-2">
                             {log.projectTitle}

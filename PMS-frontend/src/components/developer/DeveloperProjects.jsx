@@ -196,7 +196,10 @@ const DeveloperProjects = () => {
         );
       } catch (updateError) {
         // Even if we get an error, we'll try to refresh the data
-        console.warn("Update request returned error, but will attempt to refresh data:", updateError);
+        console.warn(
+          "Update request returned error, but will attempt to refresh data:",
+          updateError
+        );
       }
 
       // Fetch updated projects regardless of update response
@@ -259,48 +262,20 @@ const DeveloperProjects = () => {
           }
         }
 
-        const errorMessage = error.response.data?.message ||
+        const errorMessage =
+          error.response.data?.message ||
           error.response.data?.error ||
           JSON.stringify(error.response.data);
 
         toast.error(`Failed to update project: ${errorMessage}`);
       } else if (error.request) {
         console.error("Error request:", error.request);
-        toast.error("No response received from server. Please check your connection.");
+        toast.error(
+          "No response received from server. Please check your connection."
+        );
       } else {
         console.error("Error message:", error.message);
         toast.error(`Failed to update project: ${error.message}`);
-      }
-    }
-  };
-
-  const handleDeleteProject = async (projectIdToDelete) => {
-    if (window.confirm("Are you sure you want to delete this project?")) {
-      try {
-        const token = localStorage.getItem("token");
-        await axios.delete(
-          `http://localhost:5294/api/Project/delete/${projectIdToDelete}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setProjects((prev) =>
-          prev.filter((p) => p.projectId !== projectIdToDelete)
-        );
-        toast.success("Project deleted successfully!");
-      } catch (error) {
-        console.error("Failed to delete project:", error);
-        if (error.response) {
-          const errorMessage =
-            error.response.data?.message ||
-            error.response.data ||
-            "An error occurred while deleting the project.";
-          toast.error(`Delete failed: ${errorMessage}`);
-        } else {
-          toast.error(
-            "Failed to delete project. Please check your connection and try again."
-          );
-        }
       }
     }
   };
@@ -390,6 +365,7 @@ const DeveloperProjects = () => {
         pauseOnHover
         theme={theme === "dark" ? "dark" : "light"}
       />
+
       {/* Sidebar */}
       <>
         {sidebarOpen && (
@@ -443,7 +419,7 @@ const DeveloperProjects = () => {
 
       {/* Main content wrapper */}
       <div
-        className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-55" : "md:ml-14"
+        className={`flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-55" : "md:ml-14"
           }`}
       >
         {/* Header */}
@@ -505,481 +481,328 @@ const DeveloperProjects = () => {
           </div>
         </header>
 
-        {/* Page Content */}
-        <main
-          className="flex flex-col justify-start items-center p-4 bg-gradient-rainbow animate-gradient-x 
-        min-h-screen rounded-tl-xl dark:rounded-none gap-8 dark:bg-gradient-rainbow-dark dark:text-white"
-        >
-          {/* Insert dashboard widgets or charts here */}
-          <div className="w-full p-6 space-y-4 bg-white/40 dark:bg-black/50 rounded-lg">
-            <div className="flex items-center justify-center gap-2">
-              <button
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500
-               text-white px-6 py-3 rounded-lg shadow-lg hover:from-blue-600 hover:to-purple-600
-                transition-all duration-300"
-              >
-                <MdOutlineLibraryBooks className="w-6 h-6" />
-                <h1 className="text-2xl font-bold">All Projects</h1>
-              </button>
-            </div>
-            <section className="w-full">
-              <div className="flex justify-between mb-4 px-4">
-                <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                  <MdOutlineLibraryBooks className="text-2xl" />
-                  My Assigned Projects
-                  {(filterTitle ||
-                    filterStatus !== "All" ||
-                    filterStartDate ||
-                    filterEndDate ||
-                    filterAssignedUser) && (
-                      <span
-                        className="text-xs font-normal bg-yellow-100 dark:bg-yellow-900 text-yellow-800
-                     dark:text-yellow-300 px-2 py-0.5 rounded-md ml-2"
-                      >
-                        Filtered
-                      </span>
-                    )}
-                  <span
-                    className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 
-                  text-xs font-medium px-2 py-1 rounded-full ml-2"
-                  >
-                    {filterTitle ||
-                      filterStatus !== "All" ||
-                      filterStartDate ||
-                      filterEndDate ||
-                      filterAssignedUser
-                      ? `${filteredProjects.length}/${projects.length}`
-                      : projects.length}
-                  </span>
-                </h2>
-
+        {/* Main Content */}
+        <main className="flex flex-col justify-start  items-center p-4 bg-gradient-rainbow animate-gradient-x min-h-screen rounded-tl-xl dark:rounded-none gap-8 dark:bg-gradient-rainbow-dark dark:text-white">
+          <div className="max-w-7xl mx-auto rounded-lg bg-white/40 p-6 dark:bg-gray-800/40 backdrop-blur-sm">
+            {/* Page Header */}
+            <div className="flex flex-col items-center justify-center mb-8">
+              <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 text-white px-8 py-3 rounded-lg shadow-lg flex items-center gap-3 mx-auto mb-6">
+                <h1 className="text-2xl font-bold">Projects</h1>
+                <span className="bg-purple-700/50 backdrop-blur-sm text-white text-sm px-2.5 py-1 rounded-full">
+                  {filteredProjects.length}
+                </span>
+              </div>
+              <div className="w-full flex justify-between items-center max-w-7xl">
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-blue-400 to-purple-400
-                   text-white px-4 py-2 rounded-lg shadow-lg hover:from-blue-500 hover:to-purple-500
-                    transition-all duration-300 font-medium"
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg shadow hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
                 >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                    />
+                  </svg>
                   {showFilters ? "Hide Filters" : "Show Filters"}
                 </button>
               </div>
+            </div>
 
-              {/* Filter Section */}
-              {showFilters && (
-                <div className="mb-6 p-4 bg-white/60 dark:bg-gray-800/60 rounded-lg shadow-md mx-4">
-                  <h3
-                    className="text-lg font-semibold mb-3 text-center bg-gradient-to-r from-blue-500
-                   to-purple-500 bg-clip-text text-transparent"
-                  >
-                    Filter Projects
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {/* Title Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Project Title
-                      </label>
-                      <input
-                        type="text"
-                        value={filterTitle}
-                        onChange={(e) => setFilterTitle(e.target.value)}
-                        placeholder="Search by title..."
-                        className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full
-                         bg-white dark:bg-gray-700"
-                      />
-                    </div>
-
-                    {/* Status Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Status
-                      </label>
-                      <select
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
-                        className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full
-                         bg-white dark:bg-gray-700"
-                      >
-                        <option value="All">All Statuses</option>
-                        <option value="Not Started">Not Started</option>
-                        <option value="Upcoming">Upcoming</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="On Hold">On Hold</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                    </div>
-
-                    {/* Start Date Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Start Date (After)
-                      </label>
-                      <input
-                        type="date"
-                        value={filterStartDate}
-                        onChange={(e) => setFilterStartDate(e.target.value)}
-                        className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full
-                         bg-white dark:bg-gray-700"
-                      />
-                    </div>
-
-                    {/* End Date Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Deadline (Before)
-                      </label>
-                      <input
-                        type="date"
-                        value={filterEndDate}
-                        onChange={(e) => setFilterEndDate(e.target.value)}
-                        className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full
-                         bg-white dark:bg-gray-700"
-                      />
-                    </div>
-
-                    {/* Assigned User Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Assigned User
-                      </label>
-                      <select
-                        value={filterAssignedUser}
-                        onChange={(e) => setFilterAssignedUser(e.target.value)}
-                        className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full
-                         bg-white dark:bg-gray-700"
-                      >
-                        <option value="">All Team Members</option>
-                        {users.map((user) => (
-                          <option key={user.userId} value={user.userId}>
-                            {user.userFullName ||
-                              user.userName ||
-                              user.userEmail}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Clear Filters Button */}
-                    <div className="flex items-end">
-                      <button
-                        onClick={clearFilters}
-                        className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white
-                         px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-all 
-                         w-full"
-                      >
-                        Clear Filters
-                      </button>
-                    </div>
+            {/* Filters */}
+            {showFilters && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 p-6 animate-slideDown">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Search
+                    </label>
+                    <input
+                      type="text"
+                      value={filterTitle}
+                      onChange={(e) => setFilterTitle(e.target.value)}
+                      placeholder="Search projects..."
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Status
+                    </label>{" "}
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                    >
+                      <option value="All">All Statuses</option>
+                      <option value="Not Started">Not Started</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                      <option value="On Hold">On Hold</option>
+                      <option value="Cancelled">Cancelled</option>
+                      <option value="Upcoming">Upcoming</option>
+                    </select>
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      onClick={clearFilters}
+                      className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200"
+                    >
+                      Clear Filters
+                    </button>
                   </div>
                 </div>
-              )}
-
-              <div className="p-4 overflow-x-auto">
-                <table className="w-full text-left border border-black dark:border-white">
-                  <thead className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                    <tr>
-                      <th className="border border-black dark:border-white p-2">
-                        ID
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Title
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Description
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Status
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Start Date
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Deadline
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Created By
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Assigned Users
-                      </th>
-                      <th className="border border-black dark:border-white p-2">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-medium">
-                    {loading ? (
-                      <tr>
-                        <td
-                          colSpan="9"
-                          className="text-center p-4 text-gray-500 dark:text-gray-400"
-                        >
-                          <p>Loading...</p>
-                        </td>
-                      </tr>
-                    ) : visibleProjects.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan="9"
-                          className="text-center p-4 text-gray-500 dark:text-gray-400"
-                        >
-                          <div className="flex flex-col items-center justify-center gap-2">
-                            <MdOutlineLibraryBooks className="text-4xl text-blue-500" />
-                            {filterTitle ||
-                              filterStatus !== "All" ||
-                              filterStartDate ||
-                              filterEndDate ||
-                              filterAssignedUser ? (
-                              <p>No projects match your current filters.</p>
-                            ) : (
-                              <p>No projects are currently assigned to you.</p>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      visibleProjects.map((project, index) => (
-                        <tr
-                          key={project.projectId}
-                          className={`${index % 2 === 0 ? "bg-white" : "bg-blue-50"
-                            } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
-                        >
-                          <td className="border border-black dark:border-white p-2">
-                            {project.projectId}
-                          </td>
-                          <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ? (
-                              <input
-                                type="text"
-                                value={editProjectData.title || ""}
-                                onChange={(e) =>
-                                  setEditProjectData((prev) => ({
-                                    ...prev,
-                                    title: e.target.value,
-                                  }))
-                                }
-                                className="border p-1 rounded w-full text-black"
-                              />
-                            ) : (
-                              project.projectTitle
-                            )}
-                          </td>
-                          <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ? (
-                              <textarea
-                                value={editProjectData.description || ""}
-                                onChange={(e) =>
-                                  setEditProjectData((prev) => ({
-                                    ...prev,
-                                    description: e.target.value,
-                                  }))
-                                }
-                                className="border p-1 rounded w-full text-black"
-                              />
-                            ) : (
-                              project.projectDescription
-                            )}
-                          </td>
-                          <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ? (
-                              <select
-                                value={editProjectData.status || ""}
-                                onChange={(e) =>
-                                  setEditProjectData((prev) => ({
-                                    ...prev,
-                                    status: e.target.value,
-                                  }))
-                                }
-                                className="border p-1 rounded w-full text-black"
-                              >
-                                <option value="Not Started">Not Started</option>
-                                <option value="Upcoming">Upcoming</option>
-                                <option value="In Progress">In Progress</option>
-                                <option value="On Hold">On Hold</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Cancelled">Cancelled</option>
-                              </select>
-                            ) : (
-                              project.projectStatus
-                            )}
-                          </td>
-                          <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ? (
-                              <input
-                                type="date"
-                                value={editProjectData.startDate || ""}
-                                onChange={(e) =>
-                                  setEditProjectData((prev) => ({
-                                    ...prev,
-                                    startDate: e.target.value,
-                                  }))
-                                }
-                                className="border p-1 rounded w-full text-black"
-                              />
-                            ) : (
-                              project.projectStartDate
-                            )}
-                          </td>
-                          <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ? (
-                              <input
-                                type="date"
-                                value={editProjectData.deadline || ""}
-                                onChange={(e) =>
-                                  setEditProjectData((prev) => ({
-                                    ...prev,
-                                    deadline: e.target.value,
-                                  }))
-                                }
-                                className="border p-1 rounded w-full text-black"
-                              />
-                            ) : (
-                              project.projectDeadLine
-                            )}
-                          </td>
-                          <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ? (
-                              <select
-                                value={editProjectData.createdByUserId || ""}
-                                onChange={(e) =>
-                                  setEditProjectData((prev) => ({
-                                    ...prev,
-                                    createdByUserId: e.target.value,
-                                  }))
-                                }
-                                className="border p-1 rounded w-full text-black"
-                              >
-                                <option value="">Select User</option>
-                                {users.map((user) => (
-                                  <option key={user.userId} value={user.userId}>
-                                    {user.userFullName ||
-                                      user.userName ||
-                                      user.userEmail}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              (() => {
-                                const user = users.find(
-                                  (u) =>
-                                    String(u.userId) ===
-                                    String(project.createdByUserId)
-                                );
-                                return user
-                                  ? user.userFullName ||
-                                  user.userName ||
-                                  user.userEmail
-                                  : project.createdByUserId;
-                              })()
-                            )}
-                          </td>
-                          <td className="border border-black dark:border-white p-2 ">
-                            {editProjectId === project.projectId ? (
-                              <select
-                                multiple
-                                value={editProjectData.assignedUsers || []}
-                                onChange={(e) => {
-                                  const selected = Array.from(
-                                    e.target.selectedOptions,
-                                    (option) => option.value
-                                  );
-                                  setEditProjectData((prev) => ({
-                                    ...prev,
-                                    assignedUsers: selected,
-                                  }));
-                                }}
-                                className="border p-1 rounded w-full text-black"
-                              >
-                                {users.map((user) => (
-                                  <option key={user.userId} value={user.userId}>
-                                    {user.userFullName ||
-                                      user.userName ||
-                                      user.userEmail}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              (project.assignedUserIds || [])
-                                .map((id) => {
-                                  const user = users.find(
-                                    (u) => String(u.userId) === String(id)
-                                  );
-                                  return user
-                                    ? user.userFullName ||
-                                    user.userName ||
-                                    user.userEmail
-                                    : id;
-                                })
-                                .join(", ")
-                            )}
-                          </td>
-                          <td className="border border-black dark:border-white p-2">
-                            <div className="flex flex-row gap-x-2">
-                              {editProjectId === project.projectId ? (
-                                <>
-                                  <button
-                                    onClick={() =>
-                                      handleUpdateProject(
-                                        project.projectId,
-                                        editProjectData
-                                      )
-                                    }
-                                    className="bg-green-500 text-white p-1 rounded hover:bg-green-600"
-                                  >
-                                    Save
-                                  </button>
-                                  <button
-                                    onClick={() => setEditProjectId(null)}
-                                    className="bg-gray-400 text-white p-1 rounded hover:bg-gray-500"
-                                  >
-                                    Cancel
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button
-                                    onClick={() => handleEdit(project)}
-                                    className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleDeleteProject(project.projectId)
-                                    }
-                                    className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
-                                  >
-                                    Delete
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-                {!showAll && filteredProjects.length > 10 && (
-                  <button
-                    className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white
-                     rounded-lg shadow-md hover:from-blue-600 hover:to-purple-600 transition-all
-                      duration-300"
-                    onClick={() => setShowAll(true)}
-                  >
-                    Show All {filteredProjects.length}{" "}
-                    {filterTitle ||
-                      filterStatus !== "All" ||
-                      filterStartDate ||
-                      filterEndDate ||
-                      filterAssignedUser
-                      ? "Filtered"
-                      : ""}{" "}
-                    Projects
-                  </button>
-                )}
               </div>
-            </section>
+            )}
+
+            {/* Loading State */}
+            {loading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : (
+              <>
+                {/* Projects Grid */}
+                <div className="  ">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                    {visibleProjects.map((project) => (
+                      <div
+                        key={project.projectId}
+                        className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+                      >
+                        <div className="p-6">
+                          {editProjectId === project.projectId ? (
+                            // Edit Mode
+                            <div className="space-y-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                  Title
+                                </label>
+                                <input
+                                  type="text"
+                                  value={editProjectData.title || ""}
+                                  onChange={(e) =>
+                                    setEditProjectData({
+                                      ...editProjectData,
+                                      title: e.target.value,
+                                    })
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                  Description
+                                </label>
+                                <textarea
+                                  value={editProjectData.description || ""}
+                                  onChange={(e) =>
+                                    setEditProjectData({
+                                      ...editProjectData,
+                                      description: e.target.value,
+                                    })
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                                  rows="3"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                  Status
+                                </label>{" "}
+                                <select
+                                  value={editProjectData.status || ""}
+                                  onChange={(e) =>
+                                    setEditProjectData({
+                                      ...editProjectData,
+                                      status: e.target.value,
+                                    })
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                                >
+                                  <option value="Not Started">Not Started</option>
+                                  <option value="In Progress">In Progress</option>
+                                  <option value="Completed">Completed</option>
+                                  <option value="On Hold">On Hold</option>
+                                  <option value="Cancelled">Cancelled</option>
+                                  <option value="Upcoming">Upcoming</option>
+                                </select>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Start Date
+                                  </label>
+                                  <input
+                                    type="date"
+                                    value={editProjectData.startDate || ""}
+                                    onChange={(e) =>
+                                      setEditProjectData({
+                                        ...editProjectData,
+                                        startDate: e.target.value,
+                                      })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Deadline
+                                  </label>
+                                  <input
+                                    type="date"
+                                    value={editProjectData.deadline || ""}
+                                    onChange={(e) =>
+                                      setEditProjectData({
+                                        ...editProjectData,
+                                        deadline: e.target.value,
+                                      })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex justify-end space-x-2 mt-4">
+                                <button
+                                  onClick={() =>
+                                    handleUpdateProject(
+                                      project.projectId,
+                                      editProjectData
+                                    )
+                                  }
+                                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditProjectId(null);
+                                    setEditProjectData({});
+                                  }}
+                                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            // View Mode
+                            <>
+                              <div className="flex flex-col gap-3">
+                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                                  {project.projectTitle}
+                                </h3>
+                                <p className="text-gray-700 dark:text-gray-300 text-base mb-2">
+                                  {project.projectDescription}
+                                </p>
+                                <div className="flex items-center mb-2">
+                                  <span className={`px-4 py-2 rounded-full text-base font-semibold flex items-center gap-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 ${project.projectStatus === "Completed"
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                    : project.projectStatus === "In Progress"
+                                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                      : project.projectStatus === "On Hold"
+                                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                        : project.projectStatus === "Cancelled"
+                                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                          : project.projectStatus === "Upcoming"
+                                            ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                                            : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                                    }`}>
+                                    STATUS: {project.projectStatus}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col gap-1 mb-2">
+                                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                    <span><span className="font-semibold">Start:</span> {project.projectStartDate}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <span><span className="font-semibold">Due:</span> {project.projectDeadLine}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                    <span><span className="font-semibold">Created by:</span> {(() => {
+                                      const creator = users.find(u => u.userId === project.createdByUserId);
+                                      return creator?.userFullName || creator?.userName || creator?.userEmail || "Unknown";
+                                    })()}</span>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col gap-1 mt-2">
+                                  <span className="font-bold text-gray-700 dark:text-gray-200 text-base mb-1">TEAM:</span>
+                                  <div className="flex flex-row gap-2 items-center">
+                                    {project.assignedUserIds.map((userId, index) => {
+                                      const user = users.find((u) => u.userId === userId);
+                                      const initials = user
+                                        ? (user.userFullName || user.userName || user.userEmail)
+                                          .split(" ")
+                                          .map((n) => n[0])
+                                          .join("")
+                                          .toUpperCase()
+                                          .substring(0, 2)
+                                        : "?";
+                                      const colors = [
+                                        "bg-gradient-to-r from-blue-500 to-purple-500",
+                                        // "bg-gradient-to-r from-green-500 to-blue-500",
+                                        // "bg-gradient-to-r from-pink-500 to-yellow-500",
+                                        // "bg-gradient-to-r from-indigo-500 to-blue-400",
+                                        // "bg-gradient-to-r from-yellow-500 to-red-500",
+                                        // "bg-gradient-to-r from-purple-500 to-pink-500",
+                                      ];
+                                      return (
+                                        <div
+                                          key={userId}
+                                          className={`${colors[index % colors.length]} w-9 h-9 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-white dark:border-gray-800 shadow`}
+                                          title={user?.userFullName || user?.userName || user?.userEmail}
+                                        >
+                                          {initials}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex justify-end space-x-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <button
+                                  onClick={() => handleEdit(project)}
+                                  className="flex-1 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-lg transition duration-200"
+                                >
+                                  Edit
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Load More */}
+                {filteredProjects.length > 10 && (
+                  <div className="text-center">
+                    <button
+                      onClick={() => setShowAll(!showAll)}
+                      className="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+                    >
+                      {showAll
+                        ? "Show Less"
+                        : `Show All ${filteredProjects.length} Projects`}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </main>
       </div>

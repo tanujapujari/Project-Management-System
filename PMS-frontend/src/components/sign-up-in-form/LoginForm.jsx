@@ -29,13 +29,13 @@ const LoginForm = () => {
       setIsSuccess(false);
       return;
     }
-    
+
     if (!userPassword) {
       setMessage("Please enter your password.");
       setIsSuccess(false);
       return;
     }
-    
+
     if (!userRole) {
       setMessage("Please select your role.");
       setIsSuccess(false);
@@ -116,7 +116,7 @@ const LoginForm = () => {
       }, 1000);
     } catch (error) {
       console.error("Login error:", error);
-      
+
       // Handle different types of errors
       if (error.code === "ECONNABORTED") {
         setMessage("Login request timed out. Please try again.");
@@ -131,7 +131,7 @@ const LoginForm = () => {
       } else {
         setMessage(error.response?.data?.message || "Login failed. Please check your credentials.");
       }
-      
+
       setIsSuccess(false);
     } finally {
       setIsLoading(false);
@@ -238,9 +238,8 @@ const LoginForm = () => {
             <button
               type="submit"
               className={`bg-black mt-4 text-white rounded-lg p-2 cursor-pointer
-               hover:bg-gray-800 transition duration-300 ease-in-out ${
-                 isLoading ? "opacity-50 cursor-not-allowed" : ""
-               }`}
+               hover:bg-gray-800 transition duration-300 ease-in-out ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               disabled={isLoading}
             >
               {isLoading ? "Logging In..." : "Login"}
@@ -248,11 +247,10 @@ const LoginForm = () => {
 
             {message && (
               <div
-                className={`text-center font-semibold text-md mt-2 p-1 rounded-lg  ${
-                  isSuccess
-                    ? "text-green-600 bg-green-100"
-                    : "text-red-600 bg-red-100"
-                }`}
+                className={`text-center font-semibold text-md mt-2 p-1 rounded-lg  ${isSuccess
+                  ? "text-green-600 bg-green-100"
+                  : "text-red-600 bg-red-100"
+                  }`}
               >
                 {message}
               </div>
@@ -267,11 +265,14 @@ const LoginForm = () => {
           </form>
         </div>
         <div
-          className={`bg-[url(/src/assets/login-register-bg.png)] hidden md:flex bg-cover ${ImgHeightClass} rounded-2xl rounded-l-none bg-no-repeat bg-center items-center`}
+          className={`bg-[url(/src/assets/login-register-bg.png)] hidden gap-7 md:flex bg-cover ${ImgHeightClass} rounded-2xl rounded-l-none bg-no-repeat bg-center flex flex-col justify-center items-center`}
         >
           <h1 className="text-5xl font-bold font-serif text-center bg-white text-transparent bg-clip-text animate-pulse drop-shadow-2xl">
             Welcome Back to Project Management System
           </h1>
+          <p className="text-center text-white max-w-md mb-2 text-justify text-sm font-semibold">
+            The Project Management System helps you organize, track, and collaborate on projects efficiently. Log in to manage tasks, assign team members, monitor progress, and keep your projects on schedule. Whether you're an admin, manager, or developer, this platform streamlines your workflow and boosts productivity.
+          </p>
         </div>
       </div>
     </div>

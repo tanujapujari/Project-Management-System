@@ -87,6 +87,8 @@ builder.Services.AddCors(options =>
     );
 });
 
+builder.Services.AddResponseCompression();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -107,6 +109,7 @@ app.UseRouting();
 app.UseCors("AllowReactApp");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseResponseCompression();
 app.MapControllers();
 
 app.Run();

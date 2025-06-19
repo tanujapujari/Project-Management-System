@@ -33,6 +33,7 @@ const DeveloperDashboard = () => {
       onHold: 0,
       notStarted: 0,
       cancelled: 0,
+      upcoming: 0,
     },
     users: {
       total: 0,
@@ -205,6 +206,9 @@ const DeveloperDashboard = () => {
             ).length,
             cancelled: userProjects.filter(
               (p) => p.projectStatus === "Cancelled"
+            ).length,
+            upcoming: userProjects.filter(
+              (p) => p.projectStatus === "Upcoming"
             ).length,
           },
           users: {
@@ -516,6 +520,7 @@ const DeveloperDashboard = () => {
                         onHold: summaryData.projects.onHold,
                         notStarted: summaryData.projects.notStarted,
                         cancelled: summaryData.projects.cancelled,
+                        upcoming: summaryData.projects.upcoming,
                       },
                       [
                         "Completed",
@@ -523,6 +528,7 @@ const DeveloperDashboard = () => {
                         "On Hold",
                         "Not Started",
                         "Cancelled",
+                        "Upcoming",
                       ],
                       [
                         "#22C55E", // Green for Completed
@@ -530,6 +536,7 @@ const DeveloperDashboard = () => {
                         "#F59E0B", // Amber for On Hold
                         "#6366F1", // Indigo for Not Started
                         "#EF4444", // Red for Cancelled
+                        "#A855F7", // Purple for Upcoming
                       ]
                     )}
                     options={chartOptions}

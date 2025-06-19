@@ -22,7 +22,6 @@ const ProjectManagerLogs = () => {
   const [userName, setUserName] = useState("");
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useContext(ThemeContext);
 
@@ -44,6 +43,8 @@ const ProjectManagerLogs = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
+      const currentUserId = localStorage.getItem("userId");
+      const currentUserName = localStorage.getItem("userName");
 
       if (!token) {
         setError("Authentication token not found. Please log in again.");
@@ -59,10 +60,15 @@ const ProjectManagerLogs = () => {
           },
         }
       );
-      setLogs(response.data);
-      setError(null);
+      // Override userName for current user
+      const logsWithUser = response.data.map(log => {
+        if (String(log.userId) === String(currentUserId)) {
+          return { ...log, userName: currentUserName };
+        }
+        return log;
+      });
+      setLogs(logsWithUser);
     } catch (err) {
-      setError("Failed to fetch activity logs");
       console.error(err);
     } finally {
       setLoading(false);
@@ -156,8 +162,8 @@ const ProjectManagerLogs = () => {
       const target = log.taskTitle
         ? `on task "${log.taskTitle}" in project "${log.projectTitle}"`
         : log.projectTitle
-        ? `on project "${log.projectTitle}"`
-        : "";
+          ? `on project "${log.projectTitle}"`
+          : "";
 
       let specificAction = "Performed an action";
 
@@ -260,18 +266,16 @@ const ProjectManagerLogs = () => {
         <aside
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-black transition-transform
                         ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
-                        ${
-                          sidebarOpen || window.innerWidth >= 640
-                            ? "translate-x-0"
-                            : "-translate-x-full"
-                        }`}
+                        ${sidebarOpen || window.innerWidth >= 640
+              ? "translate-x-0"
+              : "-translate-x-full"
+            }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
             <ul className="space-y-4">
               <li
-                className={`flex items-center gap-2 p-2 justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-lg -mt-5 mb-10 ${
-                  !sidebarOpen && "sm:hidden"
-                }`}
+                className={`flex items-center gap-2 p-2 justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-lg -mt-5 mb-10 ${!sidebarOpen && "sm:hidden"
+                  }`}
               >
                 PMS
               </li>
@@ -282,15 +286,13 @@ const ProjectManagerLogs = () => {
                   className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-all duration-200
                                         hover:bg-gradient-to-r hover:from-blue-400 hover:to-purple-400 hover:text-white
                                         dark:hover:bg-gradient-to-r dark:hover:from-purple-600 dark:hover:to-blue-600 hover:scale-105
-                                        ${
-                                          sidebarOpen ? "w-full" : "w-10 -ml-2"
-                                        }`}
+                                        ${sidebarOpen ? "w-full" : "w-10 -ml-2"
+                    }`}
                 >
                   <span className="text-xl flex-shrink-0">{icon}</span>
                   <span
-                    className={`whitespace-nowrap ${
-                      !sidebarOpen && "hidden sm:hidden"
-                    }`}
+                    className={`whitespace-nowrap ${!sidebarOpen && "hidden sm:hidden"
+                      }`}
                   >
                     {label}
                   </span>
@@ -303,15 +305,13 @@ const ProjectManagerLogs = () => {
 
       {/* Main content wrapper */}
       <div
-        className={`flex flex-col flex-1 transition-all duration-300 ${
-          sidebarOpen ? "md:ml-55" : "md:ml-14"
-        }`}
+        className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-55" : "md:ml-14"
+          }`}
       >
         {/* Header */}
         <header
-          className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 flex items-center justify-between transition-all duration-300 ${
-            sidebarOpen ? "md:ml-0" : "md:-ml-14"
-          } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
+          className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 flex items-center justify-between transition-all duration-300 ${sidebarOpen ? "md:ml-0" : "md:-ml-14"
+            } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
         >
           <div className="flex items-center gap-5">
             <RxHamburgerMenu
@@ -402,15 +402,6 @@ const ProjectManagerLogs = () => {
                           Loading activity logs...
                         </td>
                       </tr>
-                    ) : error ? (
-                      <tr>
-                        <td
-                          colSpan={4}
-                          className="border border-black dark:border-white p-2 text-center text-red-500"
-                        >
-                          {error}
-                        </td>
-                      </tr>
                     ) : logs.length === 0 ? (
                       <tr>
                         <td
@@ -424,9 +415,8 @@ const ProjectManagerLogs = () => {
                       logs.map((log, index) => (
                         <tr
                           key={log.activityLogId}
-                          className={`${
-                            index % 2 === 0 ? "bg-white" : "bg-blue-50"
-                          } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
+                          className={`${index % 2 === 0 ? "bg-white" : "bg-blue-50"
+                            } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
                         >
                           <td className="border border-black dark:border-white p-2">
                             {formatTimestamp(log.activityTime)}
@@ -441,7 +431,7 @@ const ProjectManagerLogs = () => {
                             </span>
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {log.userName}
+                            {String(log.userId) === String(localStorage.getItem('userId')) ? userName : log.userName}
                           </td>
                           <td className="border border-black dark:border-white p-2">
                             {log.projectTitle}

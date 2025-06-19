@@ -124,6 +124,7 @@ const ProjectManagerProjects = () => {
 
   const refreshProjects = useCallback(async () => {
     try {
+      console.log("Fetching projects from API...");
       const token = localStorage.getItem("token");
       const response = await axios.get(
         "http://localhost:5294/api/Project/get",
@@ -131,12 +132,20 @@ const ProjectManagerProjects = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      console.log("API response received:", response.data.length, "projects");
       const filteredProjects = response.data.filter(
         (project) => String(project.createdByUserId) === String(currentUserId)
       );
+      console.log(
+        "Filtered projects for current user:",
+        filteredProjects.length,
+        "projects"
+      );
       setProjects(filteredProjects);
+      console.log("Projects state updated");
       return filteredProjects;
     } catch (error) {
+      console.error("Failed to refresh projects:", error);
       throw error;
     }
   }, [currentUserId]);
@@ -154,147 +163,76 @@ const ProjectManagerProjects = () => {
     return `${yyyy}-${mm}-${dd}`;
   }
 
+  // Helper to ensure dd-MM-yyyy format for backend
+  const toDDMMYYYY = (dateStr) => {
+    if (!dateStr) return "";
+    let parts = dateStr.split("-");
+    if (parts[0].length === 4) {
+      // yyyy-MM-dd
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    } else if (parts[2].length === 4) {
+      // already dd-MM-yyyy
+      return dateStr;
+    }
+    return dateStr;
+  };
+
   const handleUpdateProject = async (projectIdToUpdate, updatedProject) => {
+    if (
+      !updatedProject.title ||
+      !updatedProject.description ||
+      !updatedProject.status ||
+      !updatedProject.startDate ||
+      !updatedProject.deadline ||
+      !updatedProject.assignedUsers ||
+      updatedProject.assignedUsers.length === 0
+    ) {
+      toast.error("All fields are required and at least one user must be assigned.");
+      return;
+    }
     try {
-      // Validate required fields
-      if (!updatedProject.title?.trim()) {
-        toast.error("Project title is required");
-        return;
-      }
-      if (!updatedProject.description?.trim()) {
-        toast.error("Project description is required");
-        return;
-      }
-      if (!updatedProject.status) {
-        toast.error("Project status is required");
-        return;
-      }
-      if (!updatedProject.startDate) {
-        toast.error("Start date is required");
-        return;
-      }
-      if (!updatedProject.deadline) {
-        toast.error("Deadline is required");
-        return;
-      }
-      if (!updatedProject.assignedUsers?.length) {
-        toast.error("At least one team member must be assigned");
-        return;
-      }
-
       const token = localStorage.getItem("token");
-
-      // Format dates to dd-mm-yyyy
-      const formatDate = (dateStr) => {
-        if (!dateStr) return "";
-        const date = new Date(dateStr);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
-      };
-
       const payload = {
         projectId: Number(projectIdToUpdate),
         projectTitle: updatedProject.title.trim(),
         projectDescription: updatedProject.description.trim(),
         projectStatus: updatedProject.status,
-        projectStartDate: formatDate(updatedProject.startDate),
-        projectDeadLine: formatDate(updatedProject.deadline),
+        projectStartDate: toDDMMYYYY(updatedProject.startDate),
+        projectDeadLine: toDDMMYYYY(updatedProject.deadline),
         createdByUserId: Number(currentUserId),
-        assignedUserIds: updatedProject.assignedUsers.map(id => Number(id))
+        assignedUserIds: updatedProject.assignedUsers.map(Number)
       };
-
-      // Update local state immediately
-      setProjects(prevProjects => 
-        prevProjects.map(project => 
-          project.projectId === projectIdToUpdate 
-            ? {
-                ...project,
-                projectTitle: updatedProject.title.trim(),
-                projectDescription: updatedProject.description.trim(),
-                projectStatus: updatedProject.status,
-                projectStartDate: formatDate(updatedProject.startDate),
-                projectDeadLine: formatDate(updatedProject.deadline),
-                assignedUserIds: updatedProject.assignedUsers.map(id => Number(id))
-              }
-            : project
-        )
+      await axios.put(
+        `http://localhost:5294/api/Project/update/${projectIdToUpdate}`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-
-      // Clear edit state immediately
+      // Refresh projects and update state
+      const updatedProjects = await refreshProjects();
+      setProjects(updatedProjects);
       setEditProjectId(null);
       setEditProjectData({});
-
-      try {
-        await axios.put(
-          `http://localhost:5294/api/Project/update/${projectIdToUpdate}`,
-          payload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        // Show success message
-        toast.success("Project updated successfully!", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-
-        // Refresh projects in the background
-        refreshProjects().catch(() => {
-          // Silent fail for background refresh
-        });
-      } catch (apiError) {
-        // If we get a 500 error but the data was updated locally, we'll consider it a success
-        if (apiError.response?.status === 500) {
-          toast.success("Project updated successfully!", {
-            position: "top-right",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          });
-          return;
-        }
-        throw apiError; // Re-throw other errors
-      }
+      toast.success("Project updated successfully!");
     } catch (error) {
-      // Only show error toast for non-500 errors
-      if (error.response?.status !== 500) {
-        if (error.response?.data?.errors) {
-          const validationErrors = error.response.data.errors;
-          const errorMessages = Object.values(validationErrors).flat();
-          toast.error(errorMessages[0] || "Validation failed");
-        } else if (error.response?.data?.message) {
-          toast.error(error.response.data.message);
-        } else {
-          toast.error("Failed to update project. Please try again.");
-        }
+      if (error.response) {
+        const errorMessage = error.response.data?.message || error.response.data || "An error occurred while updating the project.";
+        toast.error(`Failed to update project: ${errorMessage}`);
+      } else if (error.request) {
+        toast.error("No response received from server. Please check your connection.");
+      } else {
+        toast.error("Failed to update project. Please try again.");
       }
-      // Revert local state on error
-      refreshProjects();
     }
   };
 
   const handleDeleteProject = async (projectIdToDelete, projectTitle) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete the project "${projectTitle}"?`
-      )
-    ) {
+    if (window.confirm(`Are you sure you want to delete the project "${projectTitle}"?`)) {
       try {
-        // Show loading toast
-        const loadingToastId = toast.loading("Deleting project...");
-
         const token = localStorage.getItem("token");
         await axios.delete(
           `http://localhost:5294/api/Project/delete/${projectIdToDelete}`,
@@ -302,30 +240,14 @@ const ProjectManagerProjects = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        setProjects((prev) =>
-          prev.filter((p) => p.projectId !== projectIdToDelete)
-        );
-
-        // Update loading toast to success
-        toast.update(loadingToastId, {
-          render: `Project "${projectTitle}" deleted successfully!`,
-          type: "success",
-          isLoading: false,
-          autoClose: 3000,
-          closeButton: true,
-        });
+        setProjects((prev) => prev.filter((p) => p.projectId !== projectIdToDelete));
+        toast.success("Project deleted successfully!");
       } catch (error) {
-        console.error("Failed to delete project:", error);
         if (error.response) {
-          const errorMessage =
-            error.response.data?.message ||
-            error.response.data ||
-            "An error occurred while deleting the project.";
+          const errorMessage = error.response.data?.message || error.response.data || "An error occurred while deleting the project.";
           toast.error(`Delete failed: ${errorMessage}`);
         } else {
-          toast.error(
-            "Failed to delete project. Please check your connection and try again."
-          );
+          toast.error("Failed to delete project. Please check your connection and try again.");
         }
       }
     }
@@ -334,7 +256,6 @@ const ProjectManagerProjects = () => {
   const handleEdit = (project) => {
     setEditProjectId(project.projectId);
     setSidebarOpen(false);
-
     const editData = {
       title: project.projectTitle,
       description: project.projectDescription,
@@ -342,69 +263,38 @@ const ProjectManagerProjects = () => {
       startDate: toInputDate(project.projectStartDate),
       deadline: toInputDate(project.projectDeadLine),
       createdByUserId: currentUserId,
-      assignedUsers: project.assignedUserIds
-        ? project.assignedUserIds.map(String)
-        : [],
+      assignedUsers: project.assignedUserIds ? project.assignedUserIds.map(String) : [],
     };
-
     setEditProjectData(editData);
-    toast.info(`Editing project: ${project.projectTitle}`, {
-      icon: "✏️",
-      position: "top-right",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    });
+    toast.info(`Editing project: ${project.projectTitle}`);
   };
 
   const handleCreateProject = async (e) => {
     e.preventDefault();
-
     if (
       !newProjectData.title ||
       !newProjectData.description ||
       !newProjectData.status ||
       !newProjectData.startDate ||
       !newProjectData.deadline ||
+      !newProjectData.assignedUsers ||
       newProjectData.assignedUsers.length === 0
     ) {
-      toast.error(
-        "All fields are required and at least one user must be assigned."
-      );
+      toast.error("All fields are required and at least one user must be assigned.");
       return;
     }
-
     try {
-      // Show loading toast
-      const loadingToastId = toast.loading("Creating new project...");
-
       const token = localStorage.getItem("token");
-
-      // Format dates to dd-mm-yyyy
-      const formatDate = (dateStr) => {
-        if (!dateStr) return "";
-        const date = new Date(dateStr);
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
-      };
-
       const payload = {
         projectTitle: newProjectData.title.trim(),
         projectDescription: newProjectData.description.trim(),
         projectStatus: newProjectData.status,
-        projectStartDate: formatDate(newProjectData.startDate),
-        projectDeadLine: formatDate(newProjectData.deadline),
+        projectStartDate: toDDMMYYYY(newProjectData.startDate),
+        projectDeadLine: toDDMMYYYY(newProjectData.deadline),
         createdByUserId: Number(currentUserId),
         assignedUserIds: newProjectData.assignedUsers.map(Number),
       };
-
-      console.log("Create Project Payload:", payload);
-
-      const response = await axios.post(
+      await axios.post(
         "http://localhost:5294/api/Project/create",
         payload,
         {
@@ -414,41 +304,21 @@ const ProjectManagerProjects = () => {
           },
         }
       );
-
-      if (response.status === 200 || response.status === 201) {
-        setShowCreateForm(false);
-        setNewProjectData({
-          title: "",
-          description: "",
-          status: "Not Started",
-          startDate: "",
-          deadline: "",
-          createdByUserId: currentUserId,
-          assignedUsers: [],
-        });
-        // Refresh projects
-        await refreshProjects();
-
-        // Update loading toast to success
-        toast.update(loadingToastId, {
-          render: `Project "${newProjectData.title}" created successfully!`,
-          type: "success",
-          isLoading: false,
-          autoClose: 3000,
-          closeButton: true,
-        });
-      }
+      setShowCreateForm(false);
+      setNewProjectData({
+        title: "",
+        description: "",
+        status: "Not Started",
+        startDate: "",
+        deadline: "",
+        createdByUserId: currentUserId,
+        assignedUsers: [],
+      });
+      await refreshProjects();
+      toast.success("Project created successfully!");
     } catch (error) {
-      console.error("Failed to create project:", error);
       if (error.response) {
-        console.error("Error response data:", error.response.data);
-        toast.error(
-          `Failed to create project: ${
-            error.response.data?.message ||
-            error.response.data ||
-            "Unknown error"
-          }`
-        );
+        toast.error(`Failed to create project: ${error.response.data?.message || error.response.data || "Unknown error"}`);
       } else {
         toast.error("Failed to create project. Please try again.");
       }
@@ -458,7 +328,6 @@ const ProjectManagerProjects = () => {
   const handleShowCreateForm = () => {
     setShowCreateForm((prev) => {
       if (!prev) {
-        // When opening the form, pre-select the current user
         setNewProjectData((prevData) => ({
           ...prevData,
           createdByUserId: currentUserId,
@@ -508,6 +377,13 @@ const ProjectManagerProjects = () => {
     ? filteredProjects
     : filteredProjects.slice(0, 10);
 
+  const handleEditInputChange = (field, value) => {
+    setEditProjectData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   return (
     <div className="min-h-screen flex">
       <ToastContainer
@@ -533,18 +409,16 @@ const ProjectManagerProjects = () => {
         <aside
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-black transition-transform
               ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
-              ${
-                sidebarOpen || window.innerWidth >= 640
-                  ? "translate-x-0"
-                  : "-translate-x-full"
-              }`}
+              ${sidebarOpen || window.innerWidth >= 640
+              ? "translate-x-0"
+              : "-translate-x-full"
+            }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8">
             <ul className="space-y-4">
               <li
-                className={`flex items-center gap-2 p-2 justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-lg -mt-5 mb-10 ${
-                  !sidebarOpen && "sm:hidden"
-                }`}
+                className={`flex items-center gap-2 p-2 justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-lg -mt-5 mb-10 ${!sidebarOpen && "sm:hidden"
+                  }`}
               >
                 PMS
               </li>
@@ -559,9 +433,8 @@ const ProjectManagerProjects = () => {
                 >
                   <span className="text-xl flex-shrink-0">{icon}</span>
                   <span
-                    className={`whitespace-nowrap ${
-                      !sidebarOpen && "hidden sm:hidden"
-                    }`}
+                    className={`whitespace-nowrap ${!sidebarOpen && "hidden sm:hidden"
+                      }`}
                   >
                     {label}
                   </span>
@@ -574,25 +447,20 @@ const ProjectManagerProjects = () => {
 
       {/* Main content wrapper - Fixed header and scrollable content */}
       <div
-        className={`flex flex-col flex-1 transition-all duration-300 ${
-          sidebarOpen ? "md:ml-55" : "md:ml-14"
-        }`}
+        className={`flex flex-col flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-55" : "md:ml-14"
+          }`}
       >
         {/* Header - Fixed position */}
         <header
-          className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 flex items-center justify-between transition-all duration-300 ${
-            sidebarOpen ? "md:ml-0" : "md:-ml-14"
-          } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
+          className={`p-4 bg-white dark:bg-black sticky top-0 z-50 h-16 flex items-center justify-between transition-all duration-300 ${sidebarOpen ? "md:ml-0" : "md:-ml-14"
+            } ${theme === "dark" ? "bg-gray-400 text-white" : ""}`}
         >
           <div className="flex items-center gap-5">
-            <button
+            <RxHamburgerMenu
+              size={28}
+              className="cursor-pointer"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Toggle sidebar"
-              title="Toggle sidebar"
-            >
-              <RxHamburgerMenu size={28} />
-            </button>
+            />
           </div>
           <div className="flex items-center gap-3 relative">
             <button
@@ -937,178 +805,112 @@ const ProjectManagerProjects = () => {
             </div>
 
             <section className="w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {visibleProjects.map((project) => (
                   <div
                     key={project.projectId}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col justify-between transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
                   >
-                    <div>
+                    <div className="p-6">
                       {editProjectId === project.projectId ? (
-                        <input
-                          type="text"
-                          value={editProjectData.title || ""}
-                          onChange={(e) =>
-                            setEditProjectData((prev) => ({
-                              ...prev,
-                              title: e.target.value,
-                            }))
-                          }
-                          className="border p-1 rounded w-full text-black mb-2"
-                        />
-                      ) : (
-                        <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
-                          {project.projectTitle}
-                        </h3>
-                      )}
+                        // Edit Mode
+                        <div className="space-y-4">
+                          <div>
+                            <label htmlFor="editTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Title
+                            </label>
+                            <input
+                              id="editTitle"
+                              name="editTitle"
+                              type="text"
+                              value={editProjectData.title || ""}
+                              onChange={(e) =>
+                                handleEditInputChange("title", e.target.value)
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                            />
+                          </div>
 
-                      {editProjectId === project.projectId ? (
-                        <textarea
-                          value={editProjectData.description || ""}
-                          onChange={(e) =>
-                            setEditProjectData((prev) => ({
-                              ...prev,
-                              description: e.target.value,
-                            }))
-                          }
-                          className="border border-black dark:border-white p-1 rounded w-full text-black mb-4"
-                        />
-                      ) : (
-                        <p className="text-gray-700 dark:text-gray-300 mb-4">
-                          {project.projectDescription}
-                        </p>
-                      )}
+                          <div>
+                            <label htmlFor="editDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Description
+                            </label>
+                            <textarea
+                              id="editDescription"
+                              name="editDescription"
+                              value={editProjectData.description || ""}
+                              onChange={(e) =>
+                                handleEditInputChange("description", e.target.value)
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                              rows="3"
+                            />
+                          </div>
 
-                      <div className="mb-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm font-semibold
-                            ${
-                              project.projectStatus === "Not Started"
-                                ? "bg-gray-200 text-gray-800"
-                                : project.projectStatus === "In Progress"
-                                ? "bg-blue-200 text-blue-800"
-                                : project.projectStatus === "Completed"
-                                ? "bg-green-200 text-green-800"
-                                : project.projectStatus === "On Hold"
-                                ? "bg-yellow-200 text-yellow-800"
-                                : "bg-gray-200 text-gray-800"
-                            }`}
-                        >
-                          STATUS:{" "}
-                          {editProjectId === project.projectId ? (
+                          <div>
+                            <label htmlFor="editStatus" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Status
+                            </label>
                             <select
+                              id="editStatus"
+                              name="editStatus"
                               value={editProjectData.status || ""}
                               onChange={(e) =>
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  status: e.target.value,
-                                }))
+                                handleEditInputChange("status", e.target.value)
                               }
-                              className="ml-1 bg-transparent border-none text-sm font-semibold text-inherit dark:text-inherit"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
                             >
                               <option value="Not Started">Not Started</option>
                               <option value="Upcoming">Upcoming</option>
                               <option value="In Progress">In Progress</option>
-                              <option value="On Hold">On Hold</option>
                               <option value="Completed">Completed</option>
+                              <option value="On Hold">On Hold</option>
                               <option value="Cancelled">Cancelled</option>
                             </select>
-                          ) : (
-                            project.projectStatus
-                          )}
-                        </span>
-                      </div>
+                          </div>
 
-                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 mr-2"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <span>
-                          Start:{" "}
-                          {editProjectId === project.projectId ? (
+                          <div>
+                            <label htmlFor="editStartDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Start Date
+                            </label>
                             <input
+                              id="editStartDate"
+                              name="editStartDate"
                               type="date"
                               value={editProjectData.startDate || ""}
                               onChange={(e) =>
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  startDate: e.target.value,
-                                }))
+                                handleEditInputChange("startDate", e.target.value)
                               }
-                              className="ml-1 bg-transparent border-none text-sm text-inherit dark:text-inherit"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
                             />
-                          ) : (
-                            project.projectStartDate
-                          )}
-                        </span>
-                      </div>
+                          </div>
 
-                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 mr-2"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V6z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <span>
-                          Due:{" "}
-                          {editProjectId === project.projectId ? (
+                          <div>
+                            <label htmlFor="editDeadline" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Deadline
+                            </label>
                             <input
+                              id="editDeadline"
+                              name="editDeadline"
                               type="date"
                               value={editProjectData.deadline || ""}
                               onChange={(e) =>
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  deadline: e.target.value,
-                                }))
+                                handleEditInputChange("deadline", e.target.value)
                               }
-                              className="ml-1 bg-transparent border-none text-sm text-inherit dark:text-inherit"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
                             />
-                          ) : (
-                            project.projectDeadLine
-                          )}
-                        </span>
-                      </div>
+                          </div>
 
-                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 mr-2"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <span>
-                          Created by:{" "}
-                          {project.createdByUserName || "Unknown User"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        <span className="mr-2 font-semibold">TEAM:</span>
-                        <div className="flex -space-x-2 overflow-hidden">
-                          {editProjectId === project.projectId ? (
+                          <div>
+                            <label
+                              htmlFor="editAssignedUsers"
+                              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                            >
+                              Assigned Users
+                            </label>
                             <select
+                              id="editAssignedUsers"
+                              name="editAssignedUsers"
                               multiple
                               value={editProjectData.assignedUsers || []}
                               onChange={(e) => {
@@ -1116,12 +918,9 @@ const ProjectManagerProjects = () => {
                                   e.target.selectedOptions,
                                   (option) => option.value
                                 );
-                                setEditProjectData((prev) => ({
-                                  ...prev,
-                                  assignedUsers: selected,
-                                }));
+                                handleEditInputChange("assignedUsers", selected);
                               }}
-                              className="border border-black text-black dark:border-white p-2 rounded w-full h-20"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
                             >
                               {developers.map((developer) => (
                                 <option
@@ -1134,124 +933,160 @@ const ProjectManagerProjects = () => {
                                 </option>
                               ))}
                             </select>
-                          ) : project.assignedUserIds &&
-                            project.assignedUserIds.length > 0 ? (
-                            project.assignedUserIds.map((id) => {
-                              const user = users.find(
-                                (u) => String(u.userId) === String(id)
-                              );
-                              const userInitial = user
-                                ? (user.userFullName ||
-                                    user.userName ||
-                                    user.userEmail)[0]
-                                : "?";
-                              return (
-                                <span
-                                  key={id}
-                                  className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-bold ring-2 ring-white dark:ring-gray-800"
-                                  title={
-                                    user
-                                      ? user.userFullName ||
-                                        user.userName ||
-                                        user.userEmail
-                                      : "Unknown User"
-                                  }
-                                >
-                                  {userInitial}
-                                </span>
-                              );
-                            })
-                          ) : (
-                            <span className="text-gray-500 dark:text-gray-400">
-                              No team assigned
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              Hold Ctrl/Cmd to select multiple users
+                            </p>
+                          </div>
 
-                    <div className="flex flex-row gap-x-2 mt-4">
-                      {editProjectId === project.projectId ? (
-                        <>
-                          <button
-                            onClick={() =>
-                              handleUpdateProject(
-                                project.projectId,
-                                editProjectData
-                              )
-                            }
-                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-all duration-300 font-medium"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditProjectId(null);
-                              toast.info("Edit cancelled", {
-                                icon: "❌",
-                                autoClose: 2000,
-                              });
-                            }}
-                            className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition-all duration-300 font-medium"
-                          >
-                            Cancel
-                          </button>
-                        </>
+                          <div className="flex justify-end space-x-2 mt-4">
+                            <button
+                              onClick={() =>
+                                handleUpdateProject(
+                                  project.projectId,
+                                  editProjectData
+                                )
+                              }
+                              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
+                            >
+                              Save Changes
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditProjectId(null);
+                                setEditProjectData({});
+                              }}
+                              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
                       ) : (
+                        // View Mode
                         <>
-                          <button
-                            onClick={() => handleEdit(project)}
-                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-all duration-300 font-medium"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleDeleteProject(
-                                project.projectId,
-                                project.projectTitle
-                              )
-                            }
-                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-all duration-300 font-medium"
-                          >
-                            Delete
-                          </button>
+                          <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                              {project.projectTitle}
+                            </h3>
+                            <span
+                              className={`px-3 py-1 rounded-full text-sm font-medium ${project.projectStatus === "Completed"
+                                ? "bg-green-100 text-green-800"
+                                : project.projectStatus === "In Progress"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : project.projectStatus === "Upcoming"
+                                    ? "bg-purple-100 text-purple-800"
+                                    : project.projectStatus === "On Hold"
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : project.projectStatus === "Cancelled"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-gray-100 text-gray-800"
+                                }`}
+                            >
+                              {project.projectStatus}
+                            </span>
+                          </div>
+
+                          <p className="text-gray-600 dark:text-gray-300 line-clamp-2 mb-4">
+                            {project.projectDescription}
+                          </p>
+
+                          <div className="space-y-3 mb-4">
+                            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                              <span className="w-24">Start Date:</span>
+                              <span>{project.projectStartDate}</span>
+                            </div>
+                            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                              <span className="w-24">Due Date:</span>
+                              <span>{project.projectDeadLine}</span>
+                            </div>
+                          </div>
+
+                          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Team Members
+                            </h4>
+                            <div className="flex -space-x-2 overflow-hidden">
+                              {project.assignedUserIds.map((userId, index) => {
+                                const user = users.find(
+                                  (u) => u.userId === userId
+                                );
+                                const initials = user
+                                  ? (
+                                    user.userFullName ||
+                                    user.userName ||
+                                    user.userEmail
+                                  )
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .toUpperCase()
+                                    .substring(0, 2)
+                                  : "??";
+
+                                const colors = [
+                                  "bg-blue-500",
+                                  "bg-green-500",
+                                  "bg-purple-500",
+                                  "bg-yellow-500",
+                                  "bg-red-500",
+                                  "bg-indigo-500",
+                                ];
+
+                                return (
+                                  <div
+                                    key={userId}
+                                    className={`${colors[index % colors.length]
+                                      } w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium border-2 border-white dark:border-gray-800`}
+                                    title={
+                                      user?.userFullName ||
+                                      user?.userName ||
+                                      user?.userEmail
+                                    }
+                                  >
+                                    {initials}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end space-x-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                              onClick={() => handleEdit(project)}
+                              className="flex-1 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-lg transition duration-200"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleDeleteProject(
+                                  project.projectId,
+                                  project.projectTitle
+                                )
+                              }
+                              className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-lg transition duration-200"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-              {!showAll && filteredProjects.length > 10 && (
-                <button
-                  className="mt-4 underline text-blue-600 hover:text-blue-800"
-                  onClick={() => {
-                    setShowAll(true);
-                    toast.info(
-                      `Showing all ${filteredProjects.length} projects`,
-                      {
-                        icon: "📋",
-                        autoClose: 2000,
-                      }
-                    );
-                  }}
-                >
-                  Show All Projects
-                </button>
-              )}
-              {showAll && filteredProjects.length > 10 && (
-                <button
-                  className="mt-4 underline text-blue-600 hover:text-blue-800"
-                  onClick={() => {
-                    setShowAll(false);
-                    toast.info("Showing first 10 projects", {
-                      icon: "📋",
-                      autoClose: 2000,
-                    });
-                  }}
-                >
-                  Show Less
-                </button>
+              {/* Show More/Less Button */}
+              {filteredProjects.length > 10 && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    onClick={() => setShowAll(!showAll)}
+                    className="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+                  >
+                    {showAll
+                      ? "Show Less"
+                      : `Show All ${filteredProjects.length} Projects`}
+                  </button>
+                </div>
               )}
             </section>
           </div>
@@ -1262,11 +1097,3 @@ const ProjectManagerProjects = () => {
 };
 
 export default ProjectManagerProjects;
-
-// Add cross-browser text size adjust support
-<style>{`
-  * {
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-  }
-`}</style>
