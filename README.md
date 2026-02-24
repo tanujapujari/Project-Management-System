@@ -83,6 +83,7 @@ npm start
 ## Contributing
 
 - If you'd like to use or improve this project:
+- Star theis Repository
 - Fork this repository
 - Clone your fork
 - Create a new branch
