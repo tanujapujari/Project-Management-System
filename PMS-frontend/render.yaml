@@ -1,8 +1,0 @@
-# Render static site configuration for Vite/React
-buildCommand: npm run build
-publishPath: dist
-
-# Optionally, set environment variables here
-# env:
-#   - key: VITE_API_URL
-#     value: https://your-backend-service.onrender.com
