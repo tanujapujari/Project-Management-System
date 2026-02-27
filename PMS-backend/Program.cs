@@ -67,22 +67,32 @@ builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy(
+//         "AllowReactApp",
+//         policy =>
+//         {
+//             policy
+//                 .WithOrigins(
+//                     "http://localhost:5173",
+//                     "https://localhost:5173",
+//                     "http://localhost:3000",
+//                     "https://localhost:3000"
+//                 )
+//                 .AllowAnyMethod()
+//                 .AllowAnyHeader()
+//                 .AllowCredentials();
+//         }
+//     );
+// });
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(
         "AllowReactApp",
         policy =>
         {
-            policy
-                .WithOrigins(
-                    "http://localhost:5173",
-                    "https://localhost:5173",
-                    "http://localhost:3000",
-                    "https://localhost:3000"
-                )
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
         }
     );
 });
