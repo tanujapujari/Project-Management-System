@@ -24,10 +24,12 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build
-        run: dotnet build ./PMS-backend/ProjectManagementSystem.csproj --configuration Release
+        working-directory: ./PMS-backend
+        run: dotnet build ProjectManagementSystem.csproj --configuration Release
 
-      - name: dotnet publish
-        run: dotnet publish ./PMS-backend/ProjectManagementSystem.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      - name: Publish
+        working-directory: ./PMS-backend
+        run: dotnet publish ProjectManagementSystem.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -64,4 +66,5 @@ jobs:
           package: .
 
           
+
 
