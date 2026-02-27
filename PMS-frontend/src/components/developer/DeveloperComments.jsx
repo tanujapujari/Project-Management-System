@@ -17,7 +17,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const DeveloperComments = () => {
   const [sidebarOpen, setSidebarOpen] = useState(
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false
+    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
@@ -113,7 +113,7 @@ const DeveloperComments = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         const formattedUsers = response.data.map((user) => ({
           ...user,
@@ -161,12 +161,12 @@ const DeveloperComments = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          "http://localhost:5294/api/Project/get",
+          `${import.meta.env.VITE_API_BASE_URL}/api/Project/get`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setProjects(response.data);
       } catch (error) {
@@ -175,7 +175,7 @@ const DeveloperComments = () => {
           console.error("Error response:", error.response.data);
           console.error("Status code:", error.response.status);
           toast.error(
-            `Failed to fetch projects: ${error.response.status} - ${error.response.data}`
+            `Failed to fetch projects: ${error.response.status} - ${error.response.data}`,
           );
         } else if (error.request) {
           console.error("No response received:", error.request);
@@ -199,7 +199,7 @@ const DeveloperComments = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setComments(response.data);
       } catch (error) {
@@ -265,8 +265,9 @@ const DeveloperComments = () => {
 
       let createdAt;
       try {
-        const date = newCommentData.createdAt
-          ? new Date(newCommentData.createdAt)
+        const date =
+          newCommentData.createdAt ?
+            new Date(newCommentData.createdAt)
           : new Date();
 
         const day = String(date.getDate()).padStart(2, "0");
@@ -310,7 +311,7 @@ const DeveloperComments = () => {
         "http://localhost:5294/Comment/get-all",
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       setComments(commentsResponse.data);
       toast.success("Comment created successfully!");
@@ -319,7 +320,7 @@ const DeveloperComments = () => {
       if (error.response) {
         console.error("Error response:", error.response.data);
         toast.error(
-          "Failed to create comment: " + (error.response.data || error.message)
+          "Failed to create comment: " + (error.response.data || error.message),
         );
       } else if (error.request) {
         console.error("No response received:", error.request);
@@ -336,9 +337,8 @@ const DeveloperComments = () => {
       const token = localStorage.getItem("token");
       const payload = {
         commentContent: editContent.commentContent,
-        taskItemId: editContent.taskItemId
-          ? Number(editContent.taskItemId)
-          : null,
+        taskItemId:
+          editContent.taskItemId ? Number(editContent.taskItemId) : null,
         projectId: editContent.projectId ? Number(editContent.projectId) : null,
         commentedById: Number(editContent.commentedById),
       };
@@ -351,13 +351,13 @@ const DeveloperComments = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       const response = await axios.get(
         "http://localhost:5294/Comment/get-all",
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       setComments(response.data);
 
@@ -385,10 +385,10 @@ const DeveloperComments = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setComments((prev) =>
-          prev.filter((comment) => comment.commentId !== commentId)
+          prev.filter((comment) => comment.commentId !== commentId),
         );
         toast.success("Comment deleted successfully!");
       } catch (error) {
@@ -443,9 +443,8 @@ const DeveloperComments = () => {
     });
   };
 
-  const visibleComments = showAll
-    ? getFilteredComments()
-    : getFilteredComments().slice(0, 10);
+  const visibleComments =
+    showAll ? getFilteredComments() : getFilteredComments().slice(0, 10);
 
   const formatDate = (dateString) => {
     try {
@@ -556,11 +555,9 @@ const DeveloperComments = () => {
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
             >
-              {theme === "dark" ? (
+              {theme === "dark" ?
                 <MdOutlineLightMode size={18} />
-              ) : (
-                <MdOutlineDarkMode size={18} />
-              )}
+              : <MdOutlineDarkMode size={18} />}
             </button>
 
             <div
@@ -619,15 +616,14 @@ const DeveloperComments = () => {
                 onClick={() => setShowCreateForm((v) => !v)}
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg shadow-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium"
               >
-                {showCreateForm ? (
+                {showCreateForm ?
                   <>
                     <span className="text-lg">×</span> Close
                   </>
-                ) : (
-                  <>
+                : <>
                     <span className="text-lg">+</span> Create Comment
                   </>
-                )}
+                }
               </button>
             </div>
 
@@ -686,7 +682,7 @@ const DeveloperComments = () => {
                       <option key="all-projects" value="">
                         All Projects
                       </option>
-                      {projects.length > 0 ? (
+                      {projects.length > 0 ?
                         projects.map((project) => (
                           <option
                             key={project.projectId}
@@ -697,11 +693,10 @@ const DeveloperComments = () => {
                               `(${project.projectStatus})`}
                           </option>
                         ))
-                      ) : (
-                        <option key="loading-projects-filter" value="" disabled>
+                      : <option key="loading-projects-filter" value="" disabled>
                           Loading projects...
                         </option>
-                      )}
+                      }
                     </select>
                   </div>
 
@@ -800,7 +795,7 @@ const DeveloperComments = () => {
                 </div>
 
                 {/* Select Task or Project */}
-                {commentType === "task" ? (
+                {commentType === "task" ?
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Related Task
@@ -826,8 +821,7 @@ const DeveloperComments = () => {
                       ))}
                     </select>
                   </div>
-                ) : (
-                  <div>
+                : <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Related Project
                     </label>
@@ -845,7 +839,7 @@ const DeveloperComments = () => {
                       <option key="select-project" value="">
                         Select Project
                       </option>
-                      {projects.length > 0 ? (
+                      {projects.length > 0 ?
                         projects.map((project) => (
                           <option
                             key={project.projectId}
@@ -856,11 +850,10 @@ const DeveloperComments = () => {
                               `(${project.projectStatus})`}
                           </option>
                         ))
-                      ) : (
-                        <option key="loading-projects-create" value="" disabled>
+                      : <option key="loading-projects-create" value="" disabled>
                           Loading projects...
                         </option>
-                      )}
+                      }
                     </select>
                     {projects.length === 0 && (
                       <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
@@ -869,7 +862,7 @@ const DeveloperComments = () => {
                       </p>
                     )}
                   </div>
-                )}
+                }
 
                 {/* Select User */}
                 <div>
@@ -900,11 +893,11 @@ const DeveloperComments = () => {
                   <input
                     type="date"
                     value={
-                      newCommentData.createdAt
-                        ? new Date(newCommentData.createdAt)
-                            .toISOString()
-                            .split("T")[0]
-                        : new Date().toISOString().split("T")[0]
+                      newCommentData.createdAt ?
+                        new Date(newCommentData.createdAt)
+                          .toISOString()
+                          .split("T")[0]
+                      : new Date().toISOString().split("T")[0]
                     }
                     onChange={(e) =>
                       setNewCommentData((prev) => ({
@@ -968,7 +961,7 @@ const DeveloperComments = () => {
                           {comment.commentId}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {editCommentId === comment.commentId ? (
+                          {editCommentId === comment.commentId ?
                             <div className="flex gap-2 items-center">
                               <textarea
                                 value={editContent.commentContent}
@@ -993,21 +986,20 @@ const DeveloperComments = () => {
                                 Cancel
                               </button>
                             </div>
-                          ) : (
-                            comment.commentContent
-                          )}
+                          : comment.commentContent}
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           {comment.taskItemId ? "Task" : "Project"}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {comment.taskItemId
-                            ? tasks.find(
-                                (t) => t.taskItemId === comment.taskItemId
-                              )?.taskTitle || "Unknown Task"
-                            : projects.find(
-                                (p) => p.projectId === comment.projectId
-                              )?.projectTitle || "Unknown Project"}
+                          {comment.taskItemId ?
+                            tasks.find(
+                              (t) => t.taskItemId === comment.taskItemId,
+                            )?.taskTitle || "Unknown Task"
+                          : projects.find(
+                              (p) => p.projectId === comment.projectId,
+                            )?.projectTitle || "Unknown Project"
+                          }
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           {comment.commentedByName}
@@ -1045,9 +1037,11 @@ const DeveloperComments = () => {
                     onClick={() => setShowAll(true)}
                   >
                     Show All {getFilteredComments().length}{" "}
-                    {filterContent || filterProject || filterTask || filterUser
-                      ? "Filtered"
-                      : ""}{" "}
+                    {(
+                      filterContent || filterProject || filterTask || filterUser
+                    ) ?
+                      "Filtered"
+                    : ""}{" "}
                     Comments
                   </button>
                 )}

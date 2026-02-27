@@ -17,7 +17,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const AdminTasks = () => {
   const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false
+    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
@@ -117,7 +117,7 @@ const AdminTasks = () => {
           "http://localhost:5294/AdminUser/all-users",
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         setUsers(response.data);
       } catch (error) {
@@ -139,10 +139,10 @@ const AdminTasks = () => {
       }
       try {
         const response = await axios.get(
-          "http://localhost:5294/api/Project/get",
+          `${import.meta.env.VITE_API_BASE_URL}/api/Project/get`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         setProjects(response.data);
       } catch (error) {
@@ -205,7 +205,7 @@ const AdminTasks = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.status === 200) {
@@ -213,7 +213,7 @@ const AdminTasks = () => {
           "http://localhost:5294/Task/get",
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         setTasks(fetchResponse.data);
         setEditTaskId(null);
@@ -253,7 +253,7 @@ const AdminTasks = () => {
       } else if (error.request) {
         console.error("Error request:", error.request);
         toast.error(
-          "No response received from server. Please check your connection."
+          "No response received from server. Please check your connection.",
         );
       } else {
         toast.error("Failed to update task. Error in request setup.");
@@ -271,10 +271,10 @@ const AdminTasks = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setTasks((prev) =>
-          prev.filter((task) => task.taskItemId !== taskIdToDelete)
+          prev.filter((task) => task.taskItemId !== taskIdToDelete),
         );
         toast.success("Task deleted successfully!");
       } catch (error) {
@@ -331,7 +331,7 @@ const AdminTasks = () => {
       }
       if (filterDate) {
         const taskDate = new Date(
-          task.createdAt.split("-").reverse().join("-")
+          task.createdAt.split("-").reverse().join("-"),
         ); // Convert dd-mm-yyyy to yyyy-mm-dd
         const filterDateObj = new Date(filterDate);
         taskDate.setHours(0, 0, 0, 0);
@@ -363,7 +363,7 @@ const AdminTasks = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       setTasks((prev) => [...prev, response.data]);
       setShowCreateForm(false);
@@ -380,7 +380,7 @@ const AdminTasks = () => {
     } catch (error) {
       console.error("Failed to create task:", error);
       toast.error(
-        "Failed to create task. Please check your inputs and try again."
+        "Failed to create task. Please check your inputs and try again.",
       );
     }
   };
@@ -420,9 +420,9 @@ const AdminTasks = () => {
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-black transition-transform
              ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
              ${
-               sidebarOpen || window.innerWidth >= 640
-                 ? "translate-x-0"
-                 : "-translate-x-full"
+               sidebarOpen || window.innerWidth >= 640 ?
+                 "translate-x-0"
+               : "-translate-x-full"
              }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
@@ -483,11 +483,9 @@ const AdminTasks = () => {
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
             >
-              {theme === "dark" ? (
+              {theme === "dark" ?
                 <MdOutlineLightMode size={18} />
-              ) : (
-                <MdOutlineDarkMode size={18} />
-              )}
+              : <MdOutlineDarkMode size={18} />}
             </button>
 
             <div
@@ -556,17 +554,16 @@ const AdminTasks = () => {
                 }}
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg shadow-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium"
               >
-                {showCreateForm ? (
+                {showCreateForm ?
                   <>
                     <span className="text-lg">×</span>
                     Close
                   </>
-                ) : (
-                  <>
+                : <>
                     <span className="text-lg">+</span>
                     Create Task
                   </>
-                )}
+                }
               </button>
             </div>
 
@@ -938,7 +935,7 @@ const AdminTasks = () => {
                           {task.taskItemId}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {editTaskId === task.taskItemId ? (
+                          {editTaskId === task.taskItemId ?
                             <input
                               type="text"
                               value={editTaskData.taskTitle || ""}
@@ -950,12 +947,10 @@ const AdminTasks = () => {
                               }
                               className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                             />
-                          ) : (
-                            task.taskTitle
-                          )}
+                          : task.taskTitle}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {editTaskId === task.taskItemId ? (
+                          {editTaskId === task.taskItemId ?
                             <input
                               type="text"
                               value={editTaskData.taskDescription || ""}
@@ -967,12 +962,10 @@ const AdminTasks = () => {
                               }
                               className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                             />
-                          ) : (
-                            task.taskDescription
-                          )}
+                          : task.taskDescription}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {editTaskId === task.taskItemId ? (
+                          {editTaskId === task.taskItemId ?
                             <select
                               value={editTaskData.taskStatus || ""}
                               onChange={(e) =>
@@ -988,12 +981,10 @@ const AdminTasks = () => {
                               <option value="in progress">In Progress</option>
                               <option value="completed">Completed</option>
                             </select>
-                          ) : (
-                            capitalizeFirstLetter(task.taskStatus)
-                          )}
+                          : capitalizeFirstLetter(task.taskStatus)}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {editTaskId === task.taskItemId ? (
+                          {editTaskId === task.taskItemId ?
                             <select
                               value={editTaskData.taskPriority || ""}
                               onChange={(e) =>
@@ -1009,12 +1000,10 @@ const AdminTasks = () => {
                               <option value="medium">Medium</option>
                               <option value="high">High</option>
                             </select>
-                          ) : (
-                            capitalizeFirstLetter(task.taskPriority)
-                          )}
+                          : capitalizeFirstLetter(task.taskPriority)}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {editTaskId === task.taskItemId ? (
+                          {editTaskId === task.taskItemId ?
                             <input
                               type="date"
                               value={(() => {
@@ -1041,12 +1030,10 @@ const AdminTasks = () => {
                               }}
                               className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                             />
-                          ) : (
-                            task.createdAtFormatted || ""
-                          )}
+                          : task.createdAtFormatted || ""}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {editTaskId === task.taskItemId ? (
+                          {editTaskId === task.taskItemId ?
                             <input
                               type="number"
                               value={editTaskData.projectId || ""}
@@ -1058,12 +1045,10 @@ const AdminTasks = () => {
                               }
                               className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                             />
-                          ) : (
-                            task.projectId
-                          )}
+                          : task.projectId}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {editTaskId === task.taskItemId ? (
+                          {editTaskId === task.taskItemId ?
                             <input
                               type="number"
                               value={editTaskData.assignedUserId || ""}
@@ -1075,19 +1060,17 @@ const AdminTasks = () => {
                               }
                               className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                             />
-                          ) : (
-                            task.assignedUserId
-                          )}
+                          : task.assignedUserId}
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           <div className="flex flex-row gap-x-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <>
                                 <button
                                   onClick={() =>
                                     handleUpdateTask(
                                       task.taskItemId,
-                                      editTaskData
+                                      editTaskData,
                                     )
                                   }
                                   className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded hover:from-green-600 hover:to-green-700 transition-all duration-300"
@@ -1101,8 +1084,7 @@ const AdminTasks = () => {
                                   Cancel
                                 </button>
                               </>
-                            ) : (
-                              <>
+                            : <>
                                 <button
                                   onClick={() => handleEdit(task)}
                                   className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
@@ -1118,7 +1100,7 @@ const AdminTasks = () => {
                                   Delete
                                 </button>
                               </>
-                            )}
+                            }
                           </div>
                         </td>
                       </tr>
@@ -1127,12 +1109,14 @@ const AdminTasks = () => {
                 </table>
                 <div className="mt-4 flex flex-col sm:flex-row justify-between items-center">
                   <div className="text-gray-600 dark:text-gray-300 mb-2 sm:mb-0">
-                    {filterTitle ||
-                    filterStatus ||
-                    filterPriority ||
-                    filterProject ||
-                    filterAssignedUser ||
-                    filterDate ? (
+                    {(
+                      filterTitle ||
+                      filterStatus ||
+                      filterPriority ||
+                      filterProject ||
+                      filterAssignedUser ||
+                      filterDate
+                    ) ?
                       <span>
                         Showing{" "}
                         <span className="font-semibold">{filteredCount}</span>{" "}
@@ -1143,8 +1127,7 @@ const AdminTasks = () => {
                           filteredCount > 10 &&
                           " (displaying first 10)"}
                       </span>
-                    ) : (
-                      <span>
+                    : <span>
                         Showing{" "}
                         <span className="font-semibold">{totalCount}</span>{" "}
                         tasks
@@ -1152,7 +1135,7 @@ const AdminTasks = () => {
                           totalCount > 10 &&
                           " (displaying first 10)"}
                       </span>
-                    )}
+                    }
                   </div>
 
                   {!showAll && filteredTasks.length > 10 && (

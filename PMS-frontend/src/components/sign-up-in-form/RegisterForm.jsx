@@ -37,13 +37,13 @@ const RegisterForm = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5294/api/Auth/register",
+        `${import.meta.env.VITE_API_BASE_URL}/api/Auth/register`,
         {
           UserName: userName,
           UserEmail: userEmail,
           Password: userPassword,
           UserRole: userRole,
-        }
+        },
       );
 
       const { message: successMessage } = response.data;
@@ -71,7 +71,7 @@ const RegisterForm = () => {
           } else {
             setMessage(
               error.response.data?.message ||
-                "Registration failed. Please check your credentials."
+                "Registration failed. Please check your credentials.",
             );
           }
         } else {
@@ -149,7 +149,9 @@ const RegisterForm = () => {
                 className="absolute top-2.5 right-4 text-black cursor-pointer"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? <LuEye /> : <LuEyeOff />}
+                {showPassword ?
+                  <LuEye />
+                : <LuEyeOff />}
               </span>
             </div>
 
@@ -177,11 +179,9 @@ const RegisterForm = () => {
                 className="w-full p-2 bg-violet-300 text-white text-sm font-medium rounded-lg text-left flex justify-between items-center"
               >
                 {selectedRole || "Select your Role"}
-                {isOpen ? (
+                {isOpen ?
                   <FaChevronUp className="ml-2 text-black" />
-                ) : (
-                  <FaChevronDown className="ml-2 text-black" />
-                )}
+                : <FaChevronDown className="ml-2 text-black" />}
               </button>
               {isOpen && (
                 <ul className="absolute mt-1 w-full bg-violet-100 rounded-lg shadow z-10">
@@ -217,9 +217,9 @@ const RegisterForm = () => {
             {message && (
               <div
                 className={`text-center font-semibold p-1 mt-2 rounded-lg ${
-                  isSuccess
-                    ? "text-green-600 bg-green-100"
-                    : "text-red-600 bg-red-100"
+                  isSuccess ?
+                    "text-green-600 bg-green-100"
+                  : "text-red-600 bg-red-100"
                 }`}
               >
                 {message}

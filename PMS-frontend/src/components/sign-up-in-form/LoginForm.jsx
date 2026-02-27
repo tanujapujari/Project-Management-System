@@ -29,13 +29,13 @@ const LoginForm = () => {
       setIsSuccess(false);
       return;
     }
-    
+
     if (!userPassword) {
       setMessage("Please enter your password.");
       setIsSuccess(false);
       return;
     }
-    
+
     if (!userRole) {
       setMessage("Please select your role.");
       setIsSuccess(false);
@@ -51,11 +51,11 @@ const LoginForm = () => {
         UserEmail: userEmail,
         UserRole: userRole,
         // Don't log the actual password
-        Password: "********"
+        Password: "********",
       });
 
       const response = await axios.post(
-        "http://localhost:5294/api/Auth/login",
+        `${import.meta.env.VITE_API_BASE_URL}/api/Auth/login`,
         {
           UserEmail: userEmail.trim(),
           Password: userPassword,
@@ -65,9 +65,9 @@ const LoginForm = () => {
           // Add timeout to prevent hanging requests
           timeout: 10000,
           headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+            "Content-Type": "application/json",
+          },
+        },
       );
 
       const {
@@ -85,7 +85,7 @@ const LoginForm = () => {
         userRole: roleFromServer,
         // Don't log the actual tokens
         accessToken: "********",
-        refreshToken: "********"
+        refreshToken: "********",
       });
 
       setMessage(successMessage || "Login Successful!");
@@ -116,22 +116,33 @@ const LoginForm = () => {
       }, 1000);
     } catch (error) {
       console.error("Login error:", error);
-      
+
       // Handle different types of errors
       if (error.code === "ECONNABORTED") {
         setMessage("Login request timed out. Please try again.");
       } else if (!error.response) {
-        setMessage("Cannot connect to the server. Please check your internet connection.");
+        setMessage(
+          "Cannot connect to the server. Please check your internet connection.",
+        );
       } else if (error.response.status === 401) {
-        setMessage(error.response.data.message || "Invalid email, password, or role. Please try again.");
+        setMessage(
+          error.response.data.message ||
+            "Invalid email, password, or role. Please try again.",
+        );
       } else if (error.response.status === 400) {
-        setMessage(error.response.data.message || "Invalid login details. Please check your information.");
+        setMessage(
+          error.response.data.message ||
+            "Invalid login details. Please check your information.",
+        );
       } else if (error.response.status >= 500) {
         setMessage("Server error. Please try again later.");
       } else {
-        setMessage(error.response?.data?.message || "Login failed. Please check your credentials.");
+        setMessage(
+          error.response?.data?.message ||
+            "Login failed. Please check your credentials.",
+        );
       }
-      
+
       setIsSuccess(false);
     } finally {
       setIsLoading(false);
@@ -158,7 +169,9 @@ const LoginForm = () => {
             id="loginForm"
             className="flex flex-col gap-1.5 mt-8"
           >
-            <label className="text-sm font-medium">Email <span className="text-red-500">*</span></label>
+            <label className="text-sm font-medium">
+              Email <span className="text-red-500">*</span>
+            </label>
             <div className="relative">
               <input
                 type="email"
@@ -173,7 +186,9 @@ const LoginForm = () => {
               </span>
             </div>
 
-            <label className="text-sm font-medium">Password <span className="text-red-500">*</span></label>
+            <label className="text-sm font-medium">
+              Password <span className="text-red-500">*</span>
+            </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -187,7 +202,9 @@ const LoginForm = () => {
                 className="absolute top-2.5 right-4 text-black cursor-pointer"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? <LuEye /> : <LuEyeOff />}
+                {showPassword ?
+                  <LuEye />
+                : <LuEyeOff />}
               </span>
             </div>
 
@@ -197,20 +214,20 @@ const LoginForm = () => {
             >
               Forgot Password?
             </Link>
-            <label className="block text-sm font-medium">Role <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium">
+              Role <span className="text-red-500">*</span>
+            </label>
             <div className="relative w-full">
               <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full p-2 bg-violet-300 text-sm font-medium rounded-lg text-left flex justify-between items-center"
-                style={{ color: selectedRole ? 'black' : 'white' }}
+                style={{ color: selectedRole ? "black" : "white" }}
               >
                 {selectedRole || "Select your Role"}
-                {isOpen ? (
+                {isOpen ?
                   <FaChevronUp className="ml-4 text-black" />
-                ) : (
-                  <FaChevronDown className="ml-4 text-black" />
-                )}
+                : <FaChevronDown className="ml-4 text-black" />}
               </button>
               {isOpen && (
                 <ul className="absolute mt-1 w-full bg-violet-100 rounded-lg shadow z-10">
@@ -245,9 +262,9 @@ const LoginForm = () => {
             {message && (
               <div
                 className={`text-center font-semibold text-md mt-2 p-1 rounded-lg  ${
-                  isSuccess
-                    ? "text-green-600 bg-green-100"
-                    : "text-red-600 bg-red-100"
+                  isSuccess ?
+                    "text-green-600 bg-green-100"
+                  : "text-red-600 bg-red-100"
                 }`}
               >
                 {message}

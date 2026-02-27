@@ -33,12 +33,12 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  Title
+  Title,
 );
 
 const ProjectManagerDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false
+    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
@@ -196,7 +196,9 @@ const ProjectManagerDashboard = () => {
 
         const [projectsRes, usersRes, tasksRes, activitiesRes] =
           await Promise.all([
-            fetch("http://localhost:5294/api/Project/get", { headers }),
+            fetch(`${import.meta.env.VITE_API_BASE_URL}/api/Project/get`, {
+              headers,
+            }),
             fetch("http://localhost:5294/AdminUser/all-users", { headers }),
             fetch("http://localhost:5294/Task/get", { headers }),
             fetch("http://localhost:5294/ActivityLog/get", { headers }),
@@ -232,21 +234,21 @@ const ProjectManagerDashboard = () => {
         const currentUserId = parseInt(localStorage.getItem("userId"));
 
         const userProjects = projects.filter(
-          (project) => project.createdByUserId === currentUserId
+          (project) => project.createdByUserId === currentUserId,
         );
         const developers = users.filter(
           (user) =>
             user.userRole === "Developer" &&
             userProjects.some((project) =>
-              project.assignedUserIds.includes(user.userId)
-            )
+              project.assignedUserIds.includes(user.userId),
+            ),
         );
         const developerPerformance = developers.map((developer) => {
           const assignedProjects = userProjects.filter((project) =>
-            project.assignedUserIds.includes(developer.userId)
+            project.assignedUserIds.includes(developer.userId),
           );
           const completedProjects = assignedProjects.filter(
-            (project) => project.projectStatus === "Completed"
+            (project) => project.projectStatus === "Completed",
           ).length;
 
           return {
@@ -274,15 +276,15 @@ const ProjectManagerDashboard = () => {
 
         const totalProjects = userProjects.length;
         const completedProjects = userProjects.filter(
-          (p) => p.projectStatus === "Completed"
+          (p) => p.projectStatus === "Completed",
         ).length;
         const totalTasks = tasks.filter((task) =>
-          userProjects.some((project) => project.projectId === task.projectId)
+          userProjects.some((project) => project.projectId === task.projectId),
         ).length;
         const completedTasks = tasks.filter(
           (t) =>
             t.taskStatus === "completed" &&
-            userProjects.some((project) => project.projectId === t.projectId)
+            userProjects.some((project) => project.projectId === t.projectId),
         ).length;
 
         const projectCompletionRate =
@@ -290,7 +292,7 @@ const ProjectManagerDashboard = () => {
         const taskCompletionRate =
           totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
         const calculatedCompletionRate = Math.round(
-          (projectCompletionRate + taskCompletionRate) / 2
+          (projectCompletionRate + taskCompletionRate) / 2,
         );
 
         setSummaryData({
@@ -298,24 +300,24 @@ const ProjectManagerDashboard = () => {
             total: totalProjects,
             completed: completedProjects,
             inProgress: userProjects.filter(
-              (p) => p.projectStatus === "In Progress"
+              (p) => p.projectStatus === "In Progress",
             ).length,
             onHold: userProjects.filter((p) => p.projectStatus === "On Hold")
               .length,
             notStarted: userProjects.filter(
-              (p) => p.projectStatus === "Not Started"
+              (p) => p.projectStatus === "Not Started",
             ).length,
             upcoming: userProjects.filter((p) => p.projectStatus === "Upcoming")
               .length,
             cancelled: userProjects.filter(
-              (p) => p.projectStatus === "Cancelled"
+              (p) => p.projectStatus === "Cancelled",
             ).length,
           },
           users: {
             total: users.length,
             admin: users.filter((u) => u.userRole === "Admin").length,
             projectManager: users.filter(
-              (u) => u.userRole === "Project Manager"
+              (u) => u.userRole === "Project Manager",
             ).length,
             developer: users.filter((u) => u.userRole === "Developer").length,
             client: users.filter((u) => u.userRole === "Client").length,
@@ -328,23 +330,23 @@ const ProjectManagerDashboard = () => {
               (t) =>
                 t.taskStatus === "in progress" &&
                 userProjects.some(
-                  (project) => project.projectId === t.projectId
-                )
+                  (project) => project.projectId === t.projectId,
+                ),
             ).length,
             pending: tasks.filter(
               (t) =>
                 t.taskStatus === "pending" &&
                 userProjects.some(
-                  (project) => project.projectId === t.projectId
-                )
+                  (project) => project.projectId === t.projectId,
+                ),
             ).length,
           },
         });
         const processedActivities = activities
           .filter((activity) =>
             userProjects.some(
-              (project) => project.projectTitle === activity.projectTitle
-            )
+              (project) => project.projectTitle === activity.projectTitle,
+            ),
           )
           .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
           .slice(0, 5)
@@ -361,10 +363,11 @@ const ProjectManagerDashboard = () => {
               const projectTitle = activity.projectTitle || "Untitled Project";
               formattedDetails = `Task: "${taskTitle}" in Project: "${projectTitle}"`;
             } else if (action.includes("Comment")) {
-              const target = activity.taskTitle
-                ? `on task "${activity.taskTitle}" in project "${activity.projectTitle}"`
-                : activity.projectTitle
-                ? `on project "${activity.projectTitle}"`
+              const target =
+                activity.taskTitle ?
+                  `on task "${activity.taskTitle}" in project "${activity.projectTitle}"`
+                : activity.projectTitle ?
+                  `on project "${activity.projectTitle}"`
                 : "";
               formattedDetails = `Comment ${target}`;
             }
@@ -501,9 +504,9 @@ const ProjectManagerDashboard = () => {
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-white to-blue-200 dark:from-gray-900 dark:to-black transition-transform
           ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
           ${
-            sidebarOpen || window.innerWidth >= 640
-              ? "translate-x-0"
-              : "-translate-x-full"
+            sidebarOpen || window.innerWidth >= 640 ?
+              "translate-x-0"
+            : "-translate-x-full"
           }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
@@ -564,11 +567,9 @@ const ProjectManagerDashboard = () => {
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
             >
-              {theme === "dark" ? (
+              {theme === "dark" ?
                 <MdOutlineLightMode size={18} />
-              ) : (
-                <MdOutlineDarkMode size={18} />
-              )}
+              : <MdOutlineDarkMode size={18} />}
             </button>
 
             <div
@@ -666,7 +667,7 @@ const ProjectManagerDashboard = () => {
                         "#6366F1", // Indigo for Not Started
                         "#8B5CF6", // Purple for Upcoming
                         "#EF4444", // Red for Cancelled
-                      ]
+                      ],
                     )}
                     options={chartOptions}
                   />
@@ -705,7 +706,7 @@ const ProjectManagerDashboard = () => {
                       [
                         "#10B981", // Green for Active
                         "#3B82F6", // Blue for On Project
-                      ]
+                      ],
                     )}
                     options={chartOptions}
                   />
@@ -780,7 +781,7 @@ const ProjectManagerDashboard = () => {
                         "#10B981", // Green for Completed
                         "#3B82F6", // Blue for In Progress
                         "#EF4444", // Red for Pending
-                      ]
+                      ],
                     )}
                     options={chartOptions}
                   />
@@ -844,9 +845,9 @@ const ProjectManagerDashboard = () => {
                           },
                           grid: {
                             color:
-                              theme === "dark"
-                                ? "rgba(255, 255, 255, 0.1)"
-                                : "rgba(0, 0, 0, 0.1)",
+                              theme === "dark" ?
+                                "rgba(255, 255, 255, 0.1)"
+                              : "rgba(0, 0, 0, 0.1)",
                           },
                           ticks: {
                             color: theme === "dark" ? "white" : "black",
@@ -861,9 +862,9 @@ const ProjectManagerDashboard = () => {
                           },
                           grid: {
                             color:
-                              theme === "dark"
-                                ? "rgba(255, 255, 255, 0.1)"
-                                : "rgba(0, 0, 0, 0.1)",
+                              theme === "dark" ?
+                                "rgba(255, 255, 255, 0.1)"
+                              : "rgba(0, 0, 0, 0.1)",
                           },
                           ticks: {
                             color: theme === "dark" ? "white" : "black",
@@ -888,7 +889,7 @@ const ProjectManagerDashboard = () => {
                   </h2>
                 </div>
                 <div className="space-y-4 max-h-80 overflow-y-auto">
-                  {recentActivities.length > 0 ? (
+                  {recentActivities.length > 0 ?
                     recentActivities.map((activity, index) => (
                       <div
                         key={`activity-${activity.activityLogId || index}`}
@@ -908,18 +909,18 @@ const ProjectManagerDashboard = () => {
                           </p>
                           <p
                             className={`${
-                              theme === "dark"
-                                ? "text-gray-300"
-                                : "text-gray-600"
+                              theme === "dark" ? "text-gray-300" : (
+                                "text-gray-600"
+                              )
                             } text-sm`}
                           >
                             {activity.formattedDetails || activity.details}
                           </p>
                           <p
                             className={`${
-                              theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-500"
+                              theme === "dark" ? "text-gray-400" : (
+                                "text-gray-500"
+                              )
                             } text-xs mt-1`}
                           >
                             {formatTimestamp(activity.timestamp)}
@@ -927,8 +928,7 @@ const ProjectManagerDashboard = () => {
                         </div>
                       </div>
                     ))
-                  ) : (
-                    <div className="text-center py-6">
+                  : <div className="text-center py-6">
                       <p
                         className={`${
                           theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -937,7 +937,7 @@ const ProjectManagerDashboard = () => {
                         No recent activities
                       </p>
                     </div>
-                  )}
+                  }
                 </div>
               </div>
             </div>

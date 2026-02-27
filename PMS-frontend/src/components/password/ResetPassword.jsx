@@ -43,11 +43,11 @@ const ResetPassword = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5294/api/Password/reset-password", // Backend endpoint
+        `${import.meta.env.VITE_API_BASE_URL}/api/Password/reset-password`, // Backend endpoint
         {
           token,
           newPassword,
-        }
+        },
       );
       setMessage(response.data || "Password reset successfully!");
       setTimeout(() => {
@@ -98,7 +98,9 @@ const ResetPassword = () => {
               className="absolute top-12 right-4 text-black cursor-pointer"
               onClick={() => setShowNewPassword(!showNewPassword)}
             >
-              {showNewPassword ? <LuEye /> : <LuEyeOff />}
+              {showNewPassword ?
+                <LuEye />
+              : <LuEyeOff />}
             </span>
           </div>
           <div className="relative">
@@ -120,7 +122,9 @@ const ResetPassword = () => {
               className="absolute top-12 right-4 text-black cursor-pointer"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             >
-              {showConfirmPassword ? <LuEye /> : <LuEyeOff />}
+              {showConfirmPassword ?
+                <LuEye />
+              : <LuEyeOff />}
             </span>
           </div>
           <button

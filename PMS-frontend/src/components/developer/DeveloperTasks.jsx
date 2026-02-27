@@ -16,7 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const DeveloperTasks = () => {
   const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false
+    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
@@ -104,12 +104,12 @@ const DeveloperTasks = () => {
           },
         });
         const userTasks = response.data.filter(
-          (task) => task.assignedUserId === Number(userId)
+          (task) => task.assignedUserId === Number(userId),
         );
 
         setTasks(userTasks);
         console.log(
-          `Filtered ${response.data.length} tasks to ${userTasks.length} assigned to user ID ${userId}`
+          `Filtered ${response.data.length} tasks to ${userTasks.length} assigned to user ID ${userId}`,
         );
       } catch (error) {
         if (error.response && error.response.status === 401) {
@@ -135,7 +135,7 @@ const DeveloperTasks = () => {
           "http://localhost:5294/AdminUser/all-users",
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         setUsers(response.data);
       } catch (error) {
@@ -165,21 +165,21 @@ const DeveloperTasks = () => {
 
       try {
         const response = await axios.get(
-          "http://localhost:5294/api/Project/get",
+          `${import.meta.env.VITE_API_BASE_URL}/api/Project/get`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
         const userProjects = response.data.filter(
           (project) =>
             project.assignedUserIds &&
-            project.assignedUserIds.includes(Number(userId))
+            project.assignedUserIds.includes(Number(userId)),
         );
 
         setProjects(userProjects);
         console.log(
-          `Filtered ${response.data.length} projects to ${userProjects.length} assigned to user ID ${userId}`
+          `Filtered ${response.data.length} projects to ${userProjects.length} assigned to user ID ${userId}`,
         );
       } catch (error) {
         if (error.response && error.response.status === 401) {
@@ -208,7 +208,7 @@ const DeveloperTasks = () => {
         return;
       }
       const taskToUpdate = tasks.find(
-        (task) => task.taskItemId === taskIdToUpdate
+        (task) => task.taskItemId === taskIdToUpdate,
       );
       if (!taskToUpdate) {
         toast.error("Task not found");
@@ -256,14 +256,14 @@ const DeveloperTasks = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.status === 200) {
         setTasks((prevTasks) =>
           prevTasks.map((task) =>
-            task.taskItemId === taskIdToUpdate ? { ...task, ...payload } : task
-          )
+            task.taskItemId === taskIdToUpdate ? { ...task, ...payload } : task,
+          ),
         );
         setEditTaskId(null);
         setEditTaskData({});
@@ -291,7 +291,7 @@ const DeveloperTasks = () => {
         }
       } else {
         toast.error(
-          "Failed to update task. Please check your connection and try again."
+          "Failed to update task. Please check your connection and try again.",
         );
       }
     }
@@ -307,10 +307,10 @@ const DeveloperTasks = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setTasks((prev) =>
-          prev.filter((task) => task.taskItemId !== taskIdToDelete)
+          prev.filter((task) => task.taskItemId !== taskIdToDelete),
         );
         toast.success("Task deleted successfully!");
       } catch (error) {
@@ -323,7 +323,7 @@ const DeveloperTasks = () => {
           toast.error(`Delete failed: ${errorMessage}`);
         } else {
           toast.error(
-            "Failed to delete task. Please check your connection and try again."
+            "Failed to delete task. Please check your connection and try again.",
           );
         }
       }
@@ -401,9 +401,9 @@ const DeveloperTasks = () => {
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-black transition-transform
              ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
              ${
-               sidebarOpen || window.innerWidth >= 640
-                 ? "translate-x-0"
-                 : "-translate-x-full"
+               sidebarOpen || window.innerWidth >= 640 ?
+                 "translate-x-0"
+               : "-translate-x-full"
              }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
@@ -464,11 +464,9 @@ const DeveloperTasks = () => {
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
             >
-              {theme === "dark" ? (
+              {theme === "dark" ?
                 <MdOutlineLightMode size={18} />
-              ) : (
-                <MdOutlineDarkMode size={18} />
-              )}
+              : <MdOutlineDarkMode size={18} />}
             </button>
 
             <div
@@ -512,12 +510,14 @@ const DeveloperTasks = () => {
                 <FaTasks className="w-6 h-6" />
                 <h1 className="text-2xl font-bold">My Assigned Tasks</h1>
                 <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 text-xs font-medium px-2 py-1 rounded-full ml-2">
-                  {filterTitle ||
-                  filterStatus !== "All" ||
-                  filterPriority !== "All" ||
-                  filterProject
-                    ? `${filteredTasks.length}/${tasks.length}`
-                    : tasks.length}
+                  {(
+                    filterTitle ||
+                    filterStatus !== "All" ||
+                    filterPriority !== "All" ||
+                    filterProject
+                  ) ?
+                    `${filteredTasks.length}/${tasks.length}`
+                  : tasks.length}
                 </span>
               </button>
             </div>
@@ -657,7 +657,7 @@ const DeveloperTasks = () => {
                     </tr>
                   </thead>
                   <tbody className="font-medium">
-                    {loading ? (
+                    {loading ?
                       <tr>
                         <td
                           colSpan="9"
@@ -666,7 +666,7 @@ const DeveloperTasks = () => {
                           <p>Loading...</p>
                         </td>
                       </tr>
-                    ) : visibleTasks.length === 0 ? (
+                    : visibleTasks.length === 0 ?
                       <tr>
                         <td
                           colSpan="9"
@@ -674,19 +674,18 @@ const DeveloperTasks = () => {
                         >
                           <div className="flex flex-col items-center justify-center gap-2">
                             <FaTasks className="text-4xl text-blue-500" />
-                            {filterTitle ||
-                            filterStatus !== "All" ||
-                            filterPriority !== "All" ||
-                            filterProject ? (
+                            {(
+                              filterTitle ||
+                              filterStatus !== "All" ||
+                              filterPriority !== "All" ||
+                              filterProject
+                            ) ?
                               <p>No tasks match your current filters.</p>
-                            ) : (
-                              <p>No tasks are currently assigned to you.</p>
-                            )}
+                            : <p>No tasks are currently assigned to you.</p>}
                           </div>
                         </td>
                       </tr>
-                    ) : (
-                      visibleTasks.map((task, index) => (
+                    : visibleTasks.map((task, index) => (
                         <tr
                           key={task.taskItemId}
                           className={`${
@@ -697,7 +696,7 @@ const DeveloperTasks = () => {
                             {task.taskItemId}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <input
                                 type="text"
                                 value={editTaskData.taskTitle || ""}
@@ -709,12 +708,10 @@ const DeveloperTasks = () => {
                                 }
                                 className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                               />
-                            ) : (
-                              task.taskTitle
-                            )}
+                            : task.taskTitle}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <input
                                 type="text"
                                 value={editTaskData.taskDescription || ""}
@@ -726,12 +723,10 @@ const DeveloperTasks = () => {
                                 }
                                 className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                               />
-                            ) : (
-                              task.taskDescription
-                            )}
+                            : task.taskDescription}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <select
                                 value={editTaskData.taskStatus || ""}
                                 onChange={(e) =>
@@ -747,12 +742,10 @@ const DeveloperTasks = () => {
                                 <option value="in progress">In Progress</option>
                                 <option value="completed">Completed</option>
                               </select>
-                            ) : (
-                              capitalizeFirstLetter(task.taskStatus)
-                            )}
+                            : capitalizeFirstLetter(task.taskStatus)}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <select
                                 value={editTaskData.taskPriority || ""}
                                 onChange={(e) =>
@@ -768,12 +761,10 @@ const DeveloperTasks = () => {
                                 <option value="medium">Medium</option>
                                 <option value="high">High</option>
                               </select>
-                            ) : (
-                              capitalizeFirstLetter(task.taskPriority)
-                            )}
+                            : capitalizeFirstLetter(task.taskPriority)}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <input
                                 type="date"
                                 value={(() => {
@@ -801,12 +792,10 @@ const DeveloperTasks = () => {
                                 }}
                                 className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                               />
-                            ) : (
-                              task.createdAtFormatted || ""
-                            )}
+                            : task.createdAtFormatted || ""}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <input
                                 type="number"
                                 value={editTaskData.projectId || ""}
@@ -818,12 +807,10 @@ const DeveloperTasks = () => {
                                 }
                                 className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                               />
-                            ) : (
-                              task.projectId
-                            )}
+                            : task.projectId}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <input
                                 type="number"
                                 value={editTaskData.assignedUserId || ""}
@@ -835,19 +822,17 @@ const DeveloperTasks = () => {
                                 }
                                 className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                               />
-                            ) : (
-                              task.assignedUserId
-                            )}
+                            : task.assignedUserId}
                           </td>
                           <td className="border border-black dark:border-white p-2">
                             <div className="flex flex-row gap-x-2">
-                              {editTaskId === task.taskItemId ? (
+                              {editTaskId === task.taskItemId ?
                                 <>
                                   <button
                                     onClick={() =>
                                       handleUpdateTask(
                                         task.taskItemId,
-                                        editTaskData
+                                        editTaskData,
                                       )
                                     }
                                     className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded hover:from-green-600 hover:to-green-700 transition-all duration-300"
@@ -861,8 +846,7 @@ const DeveloperTasks = () => {
                                     Cancel
                                   </button>
                                 </>
-                              ) : (
-                                <>
+                              : <>
                                   <button
                                     onClick={() => handleEdit(task)}
                                     className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
@@ -878,12 +862,12 @@ const DeveloperTasks = () => {
                                     Delete
                                   </button>
                                 </>
-                              )}
+                              }
                             </div>
                           </td>
                         </tr>
                       ))
-                    )}
+                    }
                   </tbody>
                 </table>
                 {!showAll && filteredTasks.length > 10 && (
@@ -892,12 +876,14 @@ const DeveloperTasks = () => {
                     onClick={() => setShowAll(true)}
                   >
                     Show All {filteredTasks.length}{" "}
-                    {filterTitle ||
-                    filterStatus !== "All" ||
-                    filterPriority !== "All" ||
-                    filterProject
-                      ? "Filtered"
-                      : ""}{" "}
+                    {(
+                      filterTitle ||
+                      filterStatus !== "All" ||
+                      filterPriority !== "All" ||
+                      filterProject
+                    ) ?
+                      "Filtered"
+                    : ""}{" "}
                     Tasks
                   </button>
                 )}

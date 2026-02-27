@@ -17,7 +17,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 const DeveloperDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false
+    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
@@ -108,7 +108,9 @@ const DeveloperDashboard = () => {
 
         const [projectsRes, usersRes, tasksRes, activitiesRes] =
           await Promise.all([
-            fetch("http://localhost:5294/api/Project/get", { headers }),
+            fetch(`${import.meta.env.VITE_API_BASE_URL}/api/Project/get`, {
+              headers,
+            }),
             fetch("http://localhost:5294/AdminUser/all-users", { headers }),
             fetch("http://localhost:5294/Task/get", { headers }),
             fetch("http://localhost:5294/ActivityLog/get", { headers }),
@@ -143,10 +145,10 @@ const DeveloperDashboard = () => {
         const userProjects = projects.filter(
           (project) =>
             project.assignedUserIds &&
-            project.assignedUserIds.includes(Number(currentUserId))
+            project.assignedUserIds.includes(Number(currentUserId)),
         );
         const userTasks = tasks.filter(
-          (task) => task.assignedUserId === Number(currentUserId)
+          (task) => task.assignedUserId === Number(currentUserId),
         );
 
         console.log("User Tasks:", userTasks);
@@ -181,7 +183,7 @@ const DeveloperDashboard = () => {
         setRecentActivities(processedActivities);
         const totalTasks = userTasks.length;
         const completedTasks = userTasks.filter(
-          (t) => t.taskStatus === "completed"
+          (t) => t.taskStatus === "completed",
         ).length;
 
         const taskCompletionRate =
@@ -193,25 +195,25 @@ const DeveloperDashboard = () => {
           projects: {
             total: userProjects.length,
             completed: userProjects.filter(
-              (p) => p.projectStatus === "Completed"
+              (p) => p.projectStatus === "Completed",
             ).length,
             inProgress: userProjects.filter(
-              (p) => p.projectStatus === "In Progress"
+              (p) => p.projectStatus === "In Progress",
             ).length,
             onHold: userProjects.filter((p) => p.projectStatus === "On Hold")
               .length,
             notStarted: userProjects.filter(
-              (p) => p.projectStatus === "Not Started"
+              (p) => p.projectStatus === "Not Started",
             ).length,
             cancelled: userProjects.filter(
-              (p) => p.projectStatus === "Cancelled"
+              (p) => p.projectStatus === "Cancelled",
             ).length,
           },
           users: {
             total: users.length,
             admin: users.filter((u) => u.userRole === "Admin").length,
             projectManager: users.filter(
-              (u) => u.userRole === "Project Manager"
+              (u) => u.userRole === "Project Manager",
             ).length,
             developer: users.filter((u) => u.userRole === "Developer").length,
             client: users.filter((u) => u.userRole === "Client").length,
@@ -368,9 +370,9 @@ const DeveloperDashboard = () => {
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-white to-blue-200 dark:from-gray-900 dark:to-black transition-transform
           ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
           ${
-            sidebarOpen || window.innerWidth >= 640
-              ? "translate-x-0"
-              : "-translate-x-full"
+            sidebarOpen || window.innerWidth >= 640 ?
+              "translate-x-0"
+            : "-translate-x-full"
           }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
@@ -431,11 +433,9 @@ const DeveloperDashboard = () => {
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
             >
-              {theme === "dark" ? (
+              {theme === "dark" ?
                 <MdOutlineLightMode size={18} />
-              ) : (
-                <MdOutlineDarkMode size={18} />
-              )}
+              : <MdOutlineDarkMode size={18} />}
             </button>
 
             <div
@@ -530,7 +530,7 @@ const DeveloperDashboard = () => {
                         "#F59E0B", // Amber for On Hold
                         "#6366F1", // Indigo for Not Started
                         "#EF4444", // Red for Cancelled
-                      ]
+                      ],
                     )}
                     options={chartOptions}
                   />
@@ -571,7 +571,7 @@ const DeveloperDashboard = () => {
                         "#10B981", // Green for Completed
                         "#3B82F6", // Blue for In Progress
                         "#EF4444", // Red for Pending
-                      ]
+                      ],
                     )}
                     options={chartOptions}
                   />
@@ -711,7 +711,7 @@ const DeveloperDashboard = () => {
                   </h2>
                 </div>
                 <div className="space-y-4 max-h-80 overflow-y-auto">
-                  {recentActivities.length > 0 ? (
+                  {recentActivities.length > 0 ?
                     recentActivities.map((activity, index) => (
                       <div
                         key={`activity-${activity.activityLogId || index}`}
@@ -736,9 +736,9 @@ const DeveloperDashboard = () => {
                             </p>
                             <span
                               className={`text-xs ${
-                                theme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
+                                theme === "dark" ? "text-gray-400" : (
+                                  "text-gray-500"
+                                )
                               }`}
                             >
                               {getTimeAgo(activity.timestamp)}
@@ -746,9 +746,9 @@ const DeveloperDashboard = () => {
                           </div>
                           <p
                             className={`${
-                              theme === "dark"
-                                ? "text-gray-300"
-                                : "text-gray-600"
+                              theme === "dark" ? "text-gray-300" : (
+                                "text-gray-600"
+                              )
                             }
                                } text-sm mt-1`}
                           >
@@ -757,9 +757,9 @@ const DeveloperDashboard = () => {
                           {activity.formattedDetails && (
                             <p
                               className={`${
-                                theme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
+                                theme === "dark" ? "text-gray-400" : (
+                                  "text-gray-500"
+                                )
                               } text-xs mt-1`}
                             >
                               {activity.formattedDetails}
@@ -768,8 +768,7 @@ const DeveloperDashboard = () => {
                         </div>
                       </div>
                     ))
-                  ) : (
-                    <div className="text-center py-6">
+                  : <div className="text-center py-6">
                       <p
                         className={`${
                           theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -778,7 +777,7 @@ const DeveloperDashboard = () => {
                         No recent activities
                       </p>
                     </div>
-                  )}
+                  }
                 </div>
               </div>
             </div>

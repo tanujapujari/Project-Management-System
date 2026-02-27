@@ -90,7 +90,7 @@ const formatTimestamp = (timestamp) => {
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false
+    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
@@ -179,7 +179,9 @@ const AdminDashboard = () => {
 
         const [projectsRes, usersRes, tasksRes, activitiesRes] =
           await Promise.all([
-            fetch("http://localhost:5294/api/Project/get", { headers }),
+            fetch(`${import.meta.env.VITE_API_BASE_URL}/api/Project/get`, {
+              headers,
+            }),
             fetch("http://localhost:5294/AdminUser/all-users", { headers }),
             fetch("http://localhost:5294/Task/get", { headers }),
             fetch("http://localhost:5294/ActivityLog/get", { headers }),
@@ -213,11 +215,11 @@ const AdminDashboard = () => {
 
         const totalProjects = projects.length;
         const completedProjects = projects.filter(
-          (p) => p.projectStatus === "Completed"
+          (p) => p.projectStatus === "Completed",
         ).length;
         const totalTasks = tasks.length;
         const completedTasks = tasks.filter(
-          (t) => t.taskStatus === "completed"
+          (t) => t.taskStatus === "completed",
         ).length;
 
         const projectCompletionRate =
@@ -225,7 +227,7 @@ const AdminDashboard = () => {
         const taskCompletionRate =
           totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
         const calculatedCompletionRate = Math.round(
-          (projectCompletionRate + taskCompletionRate) / 2
+          (projectCompletionRate + taskCompletionRate) / 2,
         );
 
         setSummaryData({
@@ -234,12 +236,12 @@ const AdminDashboard = () => {
             completed: projects.filter((p) => p.projectStatus === "Completed")
               .length,
             inProgress: projects.filter(
-              (p) => p.projectStatus === "In Progress"
+              (p) => p.projectStatus === "In Progress",
             ).length,
             onHold: projects.filter((p) => p.projectStatus === "On Hold")
               .length,
             notStarted: projects.filter(
-              (p) => p.projectStatus === "Not Started"
+              (p) => p.projectStatus === "Not Started",
             ).length,
             cancelled: projects.filter((p) => p.projectStatus === "Cancelled")
               .length,
@@ -248,7 +250,7 @@ const AdminDashboard = () => {
             total: users.length,
             admin: users.filter((u) => u.userRole === "Admin").length,
             projectManager: users.filter(
-              (u) => u.userRole === "Project Manager"
+              (u) => u.userRole === "Project Manager",
             ).length,
             developer: users.filter((u) => u.userRole === "Developer").length,
           },
@@ -277,10 +279,11 @@ const AdminDashboard = () => {
               const projectTitle = activity.projectTitle || "Untitled Project";
               formattedDetails = `Task: "${taskTitle}" in Project: "${projectTitle}"`;
             } else if (action.includes("Comment")) {
-              const target = activity.taskTitle
-                ? `on task "${activity.taskTitle}" in project "${activity.projectTitle}"`
-                : activity.projectTitle
-                ? `on project "${activity.projectTitle}"`
+              const target =
+                activity.taskTitle ?
+                  `on task "${activity.taskTitle}" in project "${activity.projectTitle}"`
+                : activity.projectTitle ?
+                  `on project "${activity.projectTitle}"`
                 : "";
               formattedDetails = `Comment ${target}`;
             }
@@ -368,9 +371,9 @@ const AdminDashboard = () => {
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-white to-blue-200 dark:from-gray-900 dark:to-black transition-transform
           ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
           ${
-            sidebarOpen || window.innerWidth >= 640
-              ? "translate-x-0"
-              : "-translate-x-full"
+            sidebarOpen || window.innerWidth >= 640 ?
+              "translate-x-0"
+            : "-translate-x-full"
           }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
@@ -431,11 +434,9 @@ const AdminDashboard = () => {
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
             >
-              {theme === "dark" ? (
+              {theme === "dark" ?
                 <MdOutlineLightMode size={18} />
-              ) : (
-                <MdOutlineDarkMode size={18} />
-              )}
+              : <MdOutlineDarkMode size={18} />}
             </button>
 
             <div
@@ -533,7 +534,7 @@ const AdminDashboard = () => {
                         "#F59E0B", // Amber for On Hold
                         "#6366F1", // Indigo for Not Started
                         "#EF4444", // Red for Cancelled
-                      ]
+                      ],
                     )}
                     options={chartOptions}
                   />
@@ -574,7 +575,7 @@ const AdminDashboard = () => {
                         "#8B5CF6", // Purple for Admin
                         "#3B82F6", // Blue for Project Manager
                         "#10B981", // Green for Developer
-                      ]
+                      ],
                     )}
                     options={chartOptions}
                   />
@@ -615,7 +616,7 @@ const AdminDashboard = () => {
                         "#10B981", // Green for Completed
                         "#3B82F6", // Blue for In Progress
                         "#EF4444", // Red for Pending
-                      ]
+                      ],
                     )}
                     options={chartOptions}
                   />
@@ -647,7 +648,7 @@ const AdminDashboard = () => {
                   </h2>
                 </div>
                 <div className="space-y-4 max-h-80 overflow-y-auto">
-                  {recentActivities.length > 0 ? (
+                  {recentActivities.length > 0 ?
                     recentActivities.map((activity, index) => (
                       <div
                         key={`activity-${activity.activityLogId || index}`}
@@ -667,18 +668,18 @@ const AdminDashboard = () => {
                           </p>
                           <p
                             className={`${
-                              theme === "dark"
-                                ? "text-gray-300"
-                                : "text-gray-600"
+                              theme === "dark" ? "text-gray-300" : (
+                                "text-gray-600"
+                              )
                             } text-sm`}
                           >
                             {activity.formattedDetails || activity.details}
                           </p>
                           <p
                             className={`${
-                              theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-500"
+                              theme === "dark" ? "text-gray-400" : (
+                                "text-gray-500"
+                              )
                             } text-xs mt-1`}
                           >
                             {formatTimestamp(activity.timestamp)}
@@ -686,8 +687,7 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                     ))
-                  ) : (
-                    <div className="text-center py-6">
+                  : <div className="text-center py-6">
                       <p
                         className={`${
                           theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -696,7 +696,7 @@ const AdminDashboard = () => {
                         No recent activities
                       </p>
                     </div>
-                  )}
+                  }
                 </div>
               </div>
 

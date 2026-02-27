@@ -18,7 +18,7 @@ import "react-toastify/dist/ReactToastify.css";
 const AdminComments = () => {
   const { theme, toggleTheme } = useContext(ThemeContext);
   const [sidebarOpen, setSidebarOpen] = useState(
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false
+    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
@@ -91,7 +91,7 @@ const AdminComments = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         const formattedUsers = response.data.map((user) => ({
           ...user,
@@ -139,12 +139,12 @@ const AdminComments = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          "http://localhost:5294/api/Project/get",
+          `${import.meta.env.VITE_API_BASE_URL}/api/Project/get`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setProjects(response.data);
       } catch (error) {
@@ -153,7 +153,7 @@ const AdminComments = () => {
           console.error("Error response:", error.response.data);
           console.error("Status code:", error.response.status);
           toast.error(
-            `Failed to fetch projects: ${error.response.status} - ${error.response.data}`
+            `Failed to fetch projects: ${error.response.status} - ${error.response.data}`,
           );
         } else if (error.request) {
           console.error("No response received:", error.request);
@@ -177,7 +177,7 @@ const AdminComments = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setComments(response.data);
       } catch (error) {
@@ -233,8 +233,9 @@ const AdminComments = () => {
 
       let createdAt;
       try {
-        const date = newCommentData.createdAt
-          ? new Date(newCommentData.createdAt)
+        const date =
+          newCommentData.createdAt ?
+            new Date(newCommentData.createdAt)
           : new Date();
         const day = String(date.getDate()).padStart(2, "0");
         const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -267,7 +268,7 @@ const AdminComments = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       console.log("Server response:", response.data);
@@ -286,7 +287,7 @@ const AdminComments = () => {
         "http://localhost:5294/Comment/get-all",
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       const formattedComments = commentsResponse.data.map((comment) => ({
@@ -326,9 +327,8 @@ const AdminComments = () => {
       const token = localStorage.getItem("token");
       const payload = {
         commentContent: editContent.commentContent,
-        taskItemId: editContent.taskItemId
-          ? Number(editContent.taskItemId)
-          : null,
+        taskItemId:
+          editContent.taskItemId ? Number(editContent.taskItemId) : null,
         projectId: editContent.projectId ? Number(editContent.projectId) : null,
         commentedById: Number(editContent.commentedById),
       };
@@ -341,7 +341,7 @@ const AdminComments = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const response = await axios.get(
@@ -350,7 +350,7 @@ const AdminComments = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       setComments(response.data);
 
@@ -379,10 +379,10 @@ const AdminComments = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setComments((prev) =>
-          prev.filter((comment) => comment.commentId !== commentId)
+          prev.filter((comment) => comment.commentId !== commentId),
         );
         toast.success("Comment deleted successfully!");
       } catch (error) {
@@ -451,9 +451,8 @@ const AdminComments = () => {
 
   const filteredComments = getFilteredComments();
 
-  const visibleComments = showAll
-    ? filteredComments
-    : filteredComments.slice(0, 10);
+  const visibleComments =
+    showAll ? filteredComments : filteredComments.slice(0, 10);
 
   const filteredCount = filteredComments.length;
   const totalCount = comments.length;
@@ -568,11 +567,9 @@ const AdminComments = () => {
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
             >
-              {theme === "dark" ? (
+              {theme === "dark" ?
                 <MdOutlineLightMode size={18} />
-              ) : (
-                <MdOutlineDarkMode size={18} />
-              )}
+              : <MdOutlineDarkMode size={18} />}
             </button>
 
             <div
@@ -631,15 +628,14 @@ const AdminComments = () => {
                 onClick={() => setShowCreateForm((v) => !v)}
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg shadow-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium"
               >
-                {showCreateForm ? (
+                {showCreateForm ?
                   <>
                     <span className="text-lg">×</span> Close
                   </>
-                ) : (
-                  <>
+                : <>
                     <span className="text-lg">+</span> Create Comment
                   </>
-                )}
+                }
               </button>
             </div>
 
@@ -698,7 +694,7 @@ const AdminComments = () => {
                       <option key="all-projects" value="">
                         All Projects
                       </option>
-                      {projects.length > 0 ? (
+                      {projects.length > 0 ?
                         projects.map((project) => (
                           <option
                             key={project.projectId}
@@ -709,11 +705,10 @@ const AdminComments = () => {
                               `(${project.projectStatus})`}
                           </option>
                         ))
-                      ) : (
-                        <option key="loading-projects-filter" value="" disabled>
+                      : <option key="loading-projects-filter" value="" disabled>
                           Loading projects...
                         </option>
-                      )}
+                      }
                     </select>
                   </div>
 
@@ -812,7 +807,7 @@ const AdminComments = () => {
                 </div>
 
                 {/* Select Task or Project */}
-                {commentType === "task" ? (
+                {commentType === "task" ?
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Related Task
@@ -838,8 +833,7 @@ const AdminComments = () => {
                       ))}
                     </select>
                   </div>
-                ) : (
-                  <div>
+                : <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Related Project
                     </label>
@@ -857,7 +851,7 @@ const AdminComments = () => {
                       <option key="select-project" value="">
                         Select Project
                       </option>
-                      {projects.length > 0 ? (
+                      {projects.length > 0 ?
                         projects.map((project) => (
                           <option
                             key={project.projectId}
@@ -868,11 +862,10 @@ const AdminComments = () => {
                               `(${project.projectStatus})`}
                           </option>
                         ))
-                      ) : (
-                        <option key="loading-projects-create" value="" disabled>
+                      : <option key="loading-projects-create" value="" disabled>
                           Loading projects...
                         </option>
-                      )}
+                      }
                     </select>
                     {projects.length === 0 && (
                       <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
@@ -881,7 +874,7 @@ const AdminComments = () => {
                       </p>
                     )}
                   </div>
-                )}
+                }
 
                 {/* Select User */}
                 <div>
@@ -918,11 +911,11 @@ const AdminComments = () => {
                   <input
                     type="datetime-local"
                     value={
-                      newCommentData.createdAt
-                        ? new Date(newCommentData.createdAt)
-                            .toISOString()
-                            .slice(0, 16)
-                        : new Date().toISOString().slice(0, 16)
+                      newCommentData.createdAt ?
+                        new Date(newCommentData.createdAt)
+                          .toISOString()
+                          .slice(0, 16)
+                      : new Date().toISOString().slice(0, 16)
                     }
                     onChange={(e) =>
                       setNewCommentData((prev) => ({
@@ -986,7 +979,7 @@ const AdminComments = () => {
                           {comment.commentId}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {editCommentId === comment.commentId ? (
+                          {editCommentId === comment.commentId ?
                             <div className="flex gap-2 items-center">
                               <input
                                 type="text"
@@ -1012,25 +1005,24 @@ const AdminComments = () => {
                                 Cancel
                               </button>
                             </div>
-                          ) : (
-                            comment.commentContent
-                          )}
+                          : comment.commentContent}
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           {comment.taskItemId ? "Task" : "Project"}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {comment.taskItemId
-                            ? tasks.find(
-                                (t) => t.taskItemId === comment.taskItemId
-                              )?.taskTitle ||
-                              comment.relatedTaskTitle ||
-                              "Unknown Task"
-                            : projects.find(
-                                (p) => p.projectId === comment.projectId
-                              )?.projectTitle ||
-                              comment.relatedProjectTitle ||
-                              "Unknown Project"}
+                          {comment.taskItemId ?
+                            tasks.find(
+                              (t) => t.taskItemId === comment.taskItemId,
+                            )?.taskTitle ||
+                            comment.relatedTaskTitle ||
+                            "Unknown Task"
+                          : projects.find(
+                              (p) => p.projectId === comment.projectId,
+                            )?.projectTitle ||
+                            comment.relatedProjectTitle ||
+                            "Unknown Project"
+                          }
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           {comment.commentedByName}
@@ -1065,11 +1057,13 @@ const AdminComments = () => {
 
                 <div className="mt-4 flex flex-col sm:flex-row justify-between items-center">
                   <div className="text-gray-600 dark:text-gray-300 mb-2 sm:mb-0">
-                    {filterContent ||
-                    filterTask ||
-                    filterProject ||
-                    filterUser ||
-                    filterDate ? (
+                    {(
+                      filterContent ||
+                      filterTask ||
+                      filterProject ||
+                      filterUser ||
+                      filterDate
+                    ) ?
                       <span>
                         Showing{" "}
                         <span className="font-semibold">{filteredCount}</span>{" "}
@@ -1080,8 +1074,7 @@ const AdminComments = () => {
                           filteredCount > 10 &&
                           " (displaying first 10)"}
                       </span>
-                    ) : (
-                      <span>
+                    : <span>
                         Showing{" "}
                         <span className="font-semibold">{totalCount}</span>{" "}
                         comments
@@ -1089,7 +1082,7 @@ const AdminComments = () => {
                           totalCount > 10 &&
                           " (displaying first 10)"}
                       </span>
-                    )}
+                    }
                   </div>
 
                   {!showAll && filteredComments.length > 10 && (

@@ -21,8 +21,8 @@ const ForgotPassword = () => {
     }
     try {
       const response = await axios.post(
-        "http://localhost:5294/api/Password/forgot-password",
-        { userEmail: email }
+        `${import.meta.env.VITE_API_BASE_URL}/api/Password/forgot-password`,
+        { userEmail: email },
       );
       setMessage(response.data);
     } catch (error) {

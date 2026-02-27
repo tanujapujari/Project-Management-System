@@ -15,7 +15,7 @@ import { ThemeContext } from "../../main";
 
 const ProjectManagerTasks = () => {
   const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false
+    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
@@ -133,7 +133,7 @@ const ProjectManagerTasks = () => {
           "http://localhost:5294/AdminUser/all-users",
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         setUsers(response.data);
       } catch (error) {
@@ -154,22 +154,22 @@ const ProjectManagerTasks = () => {
       }
       try {
         const response = await axios.get(
-          "http://localhost:5294/api/Project/get",
+          `${import.meta.env.VITE_API_BASE_URL}/api/Project/get`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
         const currentUserId = parseInt(localStorage.getItem("userId"));
 
         const userCreatedProjects = response.data.filter(
-          (project) => project.createdByUserId === currentUserId
+          (project) => project.createdByUserId === currentUserId,
         );
 
         const userAssignedProjects = response.data.filter(
           (project) =>
             project.assignedUsers &&
-            project.assignedUsers.includes(currentUserId)
+            project.assignedUsers.includes(currentUserId),
         );
 
         const combinedProjects = [...userCreatedProjects];
@@ -200,7 +200,7 @@ const ProjectManagerTasks = () => {
 
   const filteredTasks = tasks.filter((task) => {
     const isUserProject = userProjects.some(
-      (project) => project.projectId === task.projectId
+      (project) => project.projectId === task.projectId,
     );
     if (!isUserProject) return false;
     if (filters.status && task.taskStatus !== filters.status) return false;
@@ -269,7 +269,7 @@ const ProjectManagerTasks = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       console.log("Update response:", response.data); // Debug log
@@ -291,7 +291,7 @@ const ProjectManagerTasks = () => {
       } else if (error.request) {
         console.error("Error request:", error.request);
         alert(
-          "No response received from server. Please check your connection."
+          "No response received from server. Please check your connection.",
         );
       } else {
         console.error("Error message:", error.message);
@@ -310,10 +310,10 @@ const ProjectManagerTasks = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setTasks((prev) =>
-          prev.filter((task) => task.taskItemId !== taskIdToDelete)
+          prev.filter((task) => task.taskItemId !== taskIdToDelete),
         );
       } catch (error) {
         console.error("Failed to delete task:", error);
@@ -352,7 +352,7 @@ const ProjectManagerTasks = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       setTasks((prev) => [...prev, response.data]);
       setShowCreateForm(false);
@@ -390,9 +390,9 @@ const ProjectManagerTasks = () => {
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-black transition-transform
              ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
              ${
-               sidebarOpen || window.innerWidth >= 640
-                 ? "translate-x-0"
-                 : "-translate-x-full"
+               sidebarOpen || window.innerWidth >= 640 ?
+                 "translate-x-0"
+               : "-translate-x-full"
              }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
@@ -453,11 +453,9 @@ const ProjectManagerTasks = () => {
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
             >
-              {theme === "dark" ? (
+              {theme === "dark" ?
                 <MdOutlineLightMode size={18} />
-              ) : (
-                <MdOutlineDarkMode size={18} />
-              )}
+              : <MdOutlineDarkMode size={18} />}
             </button>
 
             <div
@@ -508,34 +506,32 @@ const ProjectManagerTasks = () => {
                 onClick={() => setShowFilters((v) => !v)}
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-400 to-purple-400 text-white px-6 py-2 rounded-lg shadow-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 font-medium"
               >
-                {showFilters ? (
+                {showFilters ?
                   <>
                     <span className="text-lg">×</span>
                     Hide Filters
                   </>
-                ) : (
-                  <>
+                : <>
                     <span className="text-lg"></span>
                     Show Filters
                   </>
-                )}
+                }
               </button>
 
               <button
                 onClick={() => setShowCreateForm((v) => !v)}
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg shadow-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium"
               >
-                {showCreateForm ? (
+                {showCreateForm ?
                   <>
                     <span className="text-lg">×</span>
                     Close
                   </>
-                ) : (
-                  <>
+                : <>
                     <span className="text-lg">+</span>
                     Create Task
                   </>
-                )}
+                }
               </button>
             </div>
 
@@ -814,7 +810,7 @@ const ProjectManagerTasks = () => {
 
             <section className="w-full">
               <div className="p-4 overflow-x-auto">
-                {filteredTasks.length === 0 ? (
+                {filteredTasks.length === 0 ?
                   <div className="text-center py-8 bg-white/40 dark:bg-black/50 rounded-lg">
                     <p className="text-lg font-medium text-gray-600 dark:text-gray-300">
                       No tasks match your current filters.
@@ -830,8 +826,7 @@ const ProjectManagerTasks = () => {
                       </button>
                     )}
                   </div>
-                ) : (
-                  <table className="w-full text-left border border-black dark:border-white">
+                : <table className="w-full text-left border border-black dark:border-white">
                     <thead>
                       <tr className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
                         <th className="border border-black dark:border-white p-2">
@@ -875,7 +870,7 @@ const ProjectManagerTasks = () => {
                             {task.taskItemId}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <input
                                 type="text"
                                 value={editTaskData.taskTitle || ""}
@@ -887,12 +882,10 @@ const ProjectManagerTasks = () => {
                                 }
                                 className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                               />
-                            ) : (
-                              task.taskTitle
-                            )}
+                            : task.taskTitle}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <input
                                 type="text"
                                 value={editTaskData.taskDescription || ""}
@@ -904,12 +897,10 @@ const ProjectManagerTasks = () => {
                                 }
                                 className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                               />
-                            ) : (
-                              task.taskDescription
-                            )}
+                            : task.taskDescription}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <select
                                 value={editTaskData.taskStatus || ""}
                                 onChange={(e) =>
@@ -925,12 +916,10 @@ const ProjectManagerTasks = () => {
                                 <option value="in progress">In Progress</option>
                                 <option value="completed">Completed</option>
                               </select>
-                            ) : (
-                              capitalizeFirstLetter(task.taskStatus)
-                            )}
+                            : capitalizeFirstLetter(task.taskStatus)}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <select
                                 value={editTaskData.taskPriority || ""}
                                 onChange={(e) =>
@@ -946,12 +935,10 @@ const ProjectManagerTasks = () => {
                                 <option value="medium">Medium</option>
                                 <option value="high">High</option>
                               </select>
-                            ) : (
-                              capitalizeFirstLetter(task.taskPriority)
-                            )}
+                            : capitalizeFirstLetter(task.taskPriority)}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <input
                                 type="date"
                                 value={(() => {
@@ -977,12 +964,10 @@ const ProjectManagerTasks = () => {
                                 }}
                                 className="border border-gray-300 dark:border-gray-600 p-1 rounded w-full bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                               />
-                            ) : (
-                              task.createdAtFormatted || ""
-                            )}
+                            : task.createdAtFormatted || ""}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <select
                                 value={editTaskData.projectId || ""}
                                 onChange={(e) =>
@@ -1003,14 +988,13 @@ const ProjectManagerTasks = () => {
                                   </option>
                                 ))}
                               </select>
-                            ) : (
-                              projects.find(
-                                (p) => p.projectId === task.projectId
+                            : projects.find(
+                                (p) => p.projectId === task.projectId,
                               )?.projectTitle || task.projectId
-                            )}
+                            }
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editTaskId === task.taskItemId ? (
+                            {editTaskId === task.taskItemId ?
                               <select
                                 value={editTaskData.assignedUserId || ""}
                                 onChange={(e) =>
@@ -1030,28 +1014,27 @@ const ProjectManagerTasks = () => {
                                   </option>
                                 ))}
                               </select>
-                            ) : (
-                              users.find(
-                                (u) => u.userId === task.assignedUserId
+                            : users.find(
+                                (u) => u.userId === task.assignedUserId,
                               )?.userFullName ||
                               users.find(
-                                (u) => u.userId === task.assignedUserId
+                                (u) => u.userId === task.assignedUserId,
                               )?.userName ||
                               users.find(
-                                (u) => u.userId === task.assignedUserId
+                                (u) => u.userId === task.assignedUserId,
                               )?.userEmail ||
                               task.assignedUserId
-                            )}
+                            }
                           </td>
                           <td className="border border-black dark:border-white p-2">
                             <div className="flex flex-row gap-x-2">
-                              {editTaskId === task.taskItemId ? (
+                              {editTaskId === task.taskItemId ?
                                 <>
                                   <button
                                     onClick={() =>
                                       handleUpdateTask(
                                         task.taskItemId,
-                                        editTaskData
+                                        editTaskData,
                                       )
                                     }
                                     className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded hover:from-green-600 hover:to-green-700 transition-all duration-300"
@@ -1065,8 +1048,7 @@ const ProjectManagerTasks = () => {
                                     Cancel
                                   </button>
                                 </>
-                              ) : (
-                                <>
+                              : <>
                                   <button
                                     onClick={() => handleEdit(task)}
                                     className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
@@ -1082,14 +1064,14 @@ const ProjectManagerTasks = () => {
                                     Delete
                                   </button>
                                 </>
-                              )}
+                              }
                             </div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                )}
+                }
                 {!showAll && filteredTasks.length > 10 && (
                   <button
                     className="mt-4 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300"
