@@ -120,11 +120,8 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(
-        "AllowReactApp",
-        policy =>
-        {
-            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-        }
+        "AllowFrontend",
+        policy => policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod()
     );
 });
 
