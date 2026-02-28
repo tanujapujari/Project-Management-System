@@ -89,9 +89,9 @@ namespace ProjectManagementSystem.Controllers
                     return BadRequest("Email address is required");
                 }
 
-                // Check rate limiting
+                // Check rate limiting (count attempts in the last hour using CreatedAt)
                 var recentAttempts = await _context.PasswordResetTokens.CountAsync(t =>
-                    t.UserEmail == request.UserEmail && t.ExpiryTime > DateTime.UtcNow.AddHours(-1)
+                    t.UserEmail == request.UserEmail && t.CreatedAt > DateTime.UtcNow.AddHours(-1)
                 );
 
                 if (recentAttempts >= MaxResetAttemptsPerHour)
@@ -120,6 +120,17 @@ namespace ProjectManagementSystem.Controllers
 
                 await CleanupExpiredTokens();
 
+                // Remove any existing tokens for this email before creating a new one
+                var existingTokens = await _context
+                    .PasswordResetTokens.Where(t => t.UserEmail == request.UserEmail)
+                    .ToListAsync();
+
+                if (existingTokens.Any())
+                {
+                    _context.PasswordResetTokens.RemoveRange(existingTokens);
+                    await _context.SaveChangesAsync();
+                }
+
                 var tokenBytes = new byte[64];
                 using var rng = RandomNumberGenerator.Create();
                 rng.GetBytes(tokenBytes);
@@ -133,6 +144,7 @@ namespace ProjectManagementSystem.Controllers
                     UserEmail = user.UserEmail,
                     TokenHash = tokenHash,
                     ExpiryTime = DateTime.UtcNow.AddHours(TokenExpiryHours),
+                    CreatedAt = DateTime.UtcNow,
                 };
 
                 _context.PasswordResetTokens.Add(resetToken);

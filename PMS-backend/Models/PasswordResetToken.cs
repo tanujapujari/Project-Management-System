@@ -16,5 +16,6 @@ namespace ProjectManagementSystem.Models
         public int UserId { get; set; }
         public string UserEmail { get; set; } = string.Empty;
         public User? User { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
