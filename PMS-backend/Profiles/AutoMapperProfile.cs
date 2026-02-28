@@ -10,7 +10,9 @@ namespace ProjectManagementSystem.Profiles
         {
             CreateMap<User, UserDTO>().ReverseMap();
             CreateMap<Comment, CommentDTO>().ReverseMap();
-            CreateMap<Project, ProjectDTO>().ReverseMap();
+            CreateMap<Project, ProjectDTO>();
+            CreateMap<CreateProjectDTO, Project>();
+            CreateMap<UpdateProjectDTO, Project>();
             CreateMap<TaskItem, TaskItemDTO>().ReverseMap();
         }
     }

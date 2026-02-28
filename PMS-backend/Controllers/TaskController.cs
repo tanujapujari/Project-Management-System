@@ -9,7 +9,7 @@ using ProjectManagementSystem.Services;
 
 namespace ProjectManagementSystem.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [Authorize]
     public class TaskController : ControllerBase
     {
@@ -194,7 +194,7 @@ namespace ProjectManagementSystem.Controllers
         {
             var task = await _context
                 .TaskItems.Include(t => t.Comments)
-                .ThenInclude(c => c.CommentedByAuthor)
+                    .ThenInclude(c => c.CommentedByAuthor)
                 .Where(t => t.TaskItemId == id)
                 .Select(t => new TaskItemDTO
                 {

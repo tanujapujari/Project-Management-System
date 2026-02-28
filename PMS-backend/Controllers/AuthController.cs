@@ -26,7 +26,7 @@ namespace ProjectManagementSystem.Controllers
         private readonly ApplicationDbContext _context = context;
         private readonly IConfiguration _configuration = configuration;
         private readonly IAuthService _authService = authService;
-        private readonly string[] _validRoles = ["Admin", "Developer", "Project Manager"];
+        private readonly string[] _validRoles = ["Admin", "Developer", "ProjectManager"];
 
         [AllowAnonymous]
         [HttpPost("login")]

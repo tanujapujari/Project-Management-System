@@ -11,15 +11,15 @@ using ProjectManagementSystem.Models;
 
 namespace ProjectManagementSystem.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin,Project Manager,Developer")]
+    [Authorize(Roles = "Admin,ProjectManager,Developer")]
     public class AdminUserController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private const int DefaultPageSize = 20;
         private const int MaxPageSize = 100;
-        private readonly string[] _validRoles = { "Admin", "Developer", "Project Manager" };
+        private readonly string[] _validRoles = { "Admin", "Developer", "ProjectManager" };
 
         public AdminUserController(ApplicationDbContext context)
         {

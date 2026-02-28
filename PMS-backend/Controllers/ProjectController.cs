@@ -98,7 +98,7 @@ namespace ProjectManagementSystem.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateProject([FromBody] ProjectDTO dto)
+        public async Task<IActionResult> CreateProject([FromBody] CreateProjectDTO dto)
         {
             if (dto == null)
                 return BadRequest("Invalid project data");
@@ -232,7 +232,7 @@ namespace ProjectManagementSystem.Controllers
         }
 
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateProject(int id, [FromBody] ProjectDTO dto)
+        public async Task<IActionResult> UpdateProject(int id, [FromBody] UpdateProjectDTO dto)
         {
             if (dto == null)
                 return BadRequest("Invalid project data");

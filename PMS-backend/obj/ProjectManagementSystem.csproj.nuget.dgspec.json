@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\tanuj\\OneDrive\\Desktop\\PMS\\PMS-backend\\ProjectManagementSystem.csproj": {}
+    "c:\\Users\\tanuj\\OneDrive\\Desktop\\PMS\\PMS-backend\\ProjectManagementSystem.csproj": {}
   },
   "projects": {
-    "C:\\Users\\tanuj\\OneDrive\\Desktop\\PMS\\PMS-backend\\ProjectManagementSystem.csproj": {
+    "c:\\Users\\tanuj\\OneDrive\\Desktop\\PMS\\PMS-backend\\ProjectManagementSystem.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\tanuj\\OneDrive\\Desktop\\PMS\\PMS-backend\\ProjectManagementSystem.csproj",
+        "projectUniqueName": "c:\\Users\\tanuj\\OneDrive\\Desktop\\PMS\\PMS-backend\\ProjectManagementSystem.csproj",
         "projectName": "ProjectManagementSystem",
-        "projectPath": "C:\\Users\\tanuj\\OneDrive\\Desktop\\PMS\\PMS-backend\\ProjectManagementSystem.csproj",
+        "projectPath": "c:\\Users\\tanuj\\OneDrive\\Desktop\\PMS\\PMS-backend\\ProjectManagementSystem.csproj",
         "packagesPath": "C:\\Users\\tanuj\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\tanuj\\OneDrive\\Desktop\\PMS\\PMS-backend\\obj\\",
+        "outputPath": "c:\\Users\\tanuj\\OneDrive\\Desktop\\PMS\\PMS-backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\tanuj\\AppData\\Roaming\\NuGet\\NuGet.Config"

@@ -9,7 +9,7 @@ using ProjectManagementSystem.Models;
 namespace ProjectManagementSystem.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [Authorize]
     public class CommentController : ControllerBase
     {

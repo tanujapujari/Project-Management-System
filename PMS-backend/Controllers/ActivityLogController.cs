@@ -6,7 +6,7 @@ using ProjectManagementSystem.DTOs;
 
 namespace ProjectManagementSystem.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin, Project Manager, Developer")]
     public class ActivityLogController : ControllerBase
