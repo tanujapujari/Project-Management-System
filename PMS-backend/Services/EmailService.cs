@@ -30,8 +30,8 @@ namespace ProjectManagementSystem.Services
             using var smtp = new SmtpClient();
             await smtp.ConnectAsync(
                 _emailSettings.SmtpServer,
-                _emailSettings.Port,
-                MailKit.Security.SecureSocketOptions.SslOnConnect
+                587,
+                MailKit.Security.SecureSocketOptions.StartTls
             );
             await smtp.AuthenticateAsync(_emailSettings.SenderEmail, _emailSettings.Password);
             await smtp.SendAsync(email);
