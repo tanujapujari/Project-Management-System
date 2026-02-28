@@ -12,14 +12,14 @@ import { RxHamburgerMenu, RxDashboard, RxActivityLog } from "react-icons/rx";
 import { FiUsers } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../main";
+import useWindowWidth from "../../hooks/useWindowWidth";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const AdminComments = () => {
   const { theme, toggleTheme } = useContext(ThemeContext);
-  const [sidebarOpen, setSidebarOpen] = useState(
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
-  );
+  const width = useWindowWidth();
+  const [sidebarOpen, setSidebarOpen] = useState(() => width >= 1024);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
   const [userName, setUserName] = useState("");
@@ -86,7 +86,7 @@ const AdminComments = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          "http://localhost:5294/AdminUser/all-users",
+          `${import.meta.env.VITE_API_BASE_URL}/api/AdminUser/all-users`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -113,11 +113,14 @@ const AdminComments = () => {
     const fetchTasks = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5294/Task/get", {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/Task/get`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
         const formattedTasks = response.data.map((task) => ({
           ...task,
           taskTitle: task.taskTitle || "Untitled",
@@ -172,7 +175,7 @@ const AdminComments = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          "http://localhost:5294/Comment/get-all",
+          `${import.meta.env.VITE_API_BASE_URL}/api/Comment/get-all`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -261,7 +264,7 @@ const AdminComments = () => {
       console.log("Sending payload:", payload);
 
       const response = await axios.post(
-        "http://localhost:5294/Comment/create",
+        `${import.meta.env.VITE_API_BASE_URL}/api/Comment/create`,
         payload,
         {
           headers: {
@@ -284,7 +287,7 @@ const AdminComments = () => {
       });
 
       const commentsResponse = await axios.get(
-        "http://localhost:5294/Comment/get-all",
+        `${import.meta.env.VITE_API_BASE_URL}/api/Comment/get-all`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -334,7 +337,7 @@ const AdminComments = () => {
       };
 
       await axios.put(
-        `http://localhost:5294/Comment/update/${editCommentId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/Comment/update/${editCommentId}`,
         payload,
         {
           headers: {
@@ -345,7 +348,7 @@ const AdminComments = () => {
       );
 
       const response = await axios.get(
-        "http://localhost:5294/Comment/get-all",
+        `${import.meta.env.VITE_API_BASE_URL}/api/Comment/get-all`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -374,7 +377,7 @@ const AdminComments = () => {
       try {
         const token = localStorage.getItem("token");
         await axios.delete(
-          `http://localhost:5294/Comment/delete/${commentId}`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/Comment/delete/${commentId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

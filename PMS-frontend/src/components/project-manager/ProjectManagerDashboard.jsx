@@ -11,6 +11,7 @@ import { RxHamburgerMenu, RxDashboard, RxActivityLog } from "react-icons/rx";
 import { FiUsers } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../main";
+import useWindowWidth from "../../hooks/useWindowWidth";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -37,9 +38,8 @@ ChartJS.register(
 );
 
 const ProjectManagerDashboard = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
-  );
+  const width = useWindowWidth();
+  const [sidebarOpen, setSidebarOpen] = useState(() => width >= 1024);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
   const [displayText, setDisplayText] = useState("");
@@ -199,9 +199,18 @@ const ProjectManagerDashboard = () => {
             fetch(`${import.meta.env.VITE_API_BASE_URL}/api/Project/get`, {
               headers,
             }),
-            fetch("http://localhost:5294/AdminUser/all-users", { headers }),
-            fetch("http://localhost:5294/Task/get", { headers }),
-            fetch("http://localhost:5294/ActivityLog/get", { headers }),
+            fetch(
+              `${import.meta.env.VITE_API_BASE_URL}/api/AdminUser/all-users`,
+              {
+                headers,
+              },
+            ),
+            fetch(`${import.meta.env.VITE_API_BASE_URL}/api/Task/get`, {
+              headers,
+            }),
+            fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ActivityLog/get`, {
+              headers,
+            }),
           ]);
 
         if (!isMounted) return;
@@ -503,11 +512,7 @@ const ProjectManagerDashboard = () => {
         <aside
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-white to-blue-200 dark:from-gray-900 dark:to-black transition-transform
           ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
-          ${
-            sidebarOpen || window.innerWidth >= 640 ?
-              "translate-x-0"
-            : "-translate-x-full"
-          }`}
+            ${sidebarOpen || width >= 640 ? "translate-x-0" : "-translate-x-full"}`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
             <ul className="space-y-4">

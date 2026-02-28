@@ -47,12 +47,7 @@ const LoginForm = () => {
     setIsSuccess(false);
 
     try {
-      console.log("Attempting login with:", {
-        UserEmail: userEmail,
-        UserRole: userRole,
-        // Don't log the actual password
-        Password: "********",
-      });
+      // removed debug log
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/Auth/login`,
@@ -79,14 +74,7 @@ const LoginForm = () => {
         userRole: roleFromServer,
       } = response.data;
 
-      console.log("Login successful:", {
-        userId,
-        userName,
-        userRole: roleFromServer,
-        // Don't log the actual tokens
-        accessToken: "********",
-        refreshToken: "********",
-      });
+      // removed debug log
 
       setMessage(successMessage || "Login Successful!");
       setIsSuccess(true);

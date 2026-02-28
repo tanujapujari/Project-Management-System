@@ -11,12 +11,12 @@ import { RxHamburgerMenu, RxDashboard, RxActivityLog } from "react-icons/rx";
 import { FiUsers } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../main";
+import useWindowWidth from "../../hooks/useWindowWidth";
 import axios from "axios";
 
 const DeveloperLogs = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false
-  );
+  const width = useWindowWidth();
+  const [sidebarOpen, setSidebarOpen] = useState(() => width >= 1024);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
   const [userName, setUserName] = useState("");
@@ -52,12 +52,12 @@ const DeveloperLogs = () => {
       }
 
       const response = await axios.get(
-        `http://localhost:5294/ActivityLog/get`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/ActivityLog/get`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       setLogs(response.data);
       setError(null);
@@ -148,10 +148,10 @@ const DeveloperLogs = () => {
     }
     // Comment Actions
     else if (action.includes("Comment")) {
-      const target = log.taskTitle
-        ? `on task "${log.taskTitle}" in project "${log.projectTitle}"`
-        : log.projectTitle
-        ? `on project "${log.projectTitle}"`
+      const target =
+        log.taskTitle ?
+          `on task "${log.taskTitle}" in project "${log.projectTitle}"`
+        : log.projectTitle ? `on project "${log.projectTitle}"`
         : "";
 
       let specificAction = "Performed an action";
@@ -251,9 +251,9 @@ const DeveloperLogs = () => {
              to-white dark:from-gray-900 dark:to-black transition-transform
               ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
               ${
-                sidebarOpen || window.innerWidth >= 640
-                  ? "translate-x-0"
-                  : "-translate-x-full"
+                sidebarOpen || width >= 640 ?
+                  "translate-x-0"
+                : "-translate-x-full"
               }`}
         >
           <div
@@ -320,11 +320,9 @@ const DeveloperLogs = () => {
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
             >
-              {theme === "dark" ? (
+              {theme === "dark" ?
                 <MdOutlineLightMode size={18} />
-              ) : (
-                <MdOutlineDarkMode size={18} />
-              )}
+              : <MdOutlineDarkMode size={18} />}
             </button>
 
             <div
@@ -401,7 +399,7 @@ const DeveloperLogs = () => {
                     </tr>
                   </thead>
                   <tbody className="font-medium">
-                    {loading ? (
+                    {loading ?
                       <tr>
                         <td
                           colSpan={4}
@@ -410,7 +408,7 @@ const DeveloperLogs = () => {
                           Loading activity logs...
                         </td>
                       </tr>
-                    ) : error ? (
+                    : error ?
                       <tr>
                         <td
                           colSpan={4}
@@ -419,7 +417,7 @@ const DeveloperLogs = () => {
                           {error}
                         </td>
                       </tr>
-                    ) : logs.length === 0 ? (
+                    : logs.length === 0 ?
                       <tr>
                         <td
                           colSpan={4}
@@ -428,8 +426,7 @@ const DeveloperLogs = () => {
                           No activity logs found.
                         </td>
                       </tr>
-                    ) : (
-                      logs.map((log, index) => (
+                    : logs.map((log, index) => (
                         <tr
                           key={log.activityLogId}
                           className={`${
@@ -442,7 +439,7 @@ const DeveloperLogs = () => {
                           <td className="border border-black dark:border-white p-2">
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium ${getActionColor(
-                                log.activityAction
+                                log.activityAction,
                               )}`}
                             >
                               {getActionText(log)}
@@ -456,7 +453,7 @@ const DeveloperLogs = () => {
                           </td>
                         </tr>
                       ))
-                    )}
+                    }
                   </tbody>
                 </table>
               </div>

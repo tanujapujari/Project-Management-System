@@ -9,13 +9,13 @@ import { RxHamburgerMenu, RxDashboard, RxActivityLog } from "react-icons/rx";
 import { LiaComments } from "react-icons/lia";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../main";
+import useWindowWidth from "../../hooks/useWindowWidth";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const ProjectManagerProjects = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
-  );
+  const width = useWindowWidth();
+  const [sidebarOpen, setSidebarOpen] = useState(() => width >= 640);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
   const [userName, setUserName] = useState("");
@@ -126,7 +126,7 @@ const ProjectManagerProjects = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          "http://localhost:5294/AdminUser/all-users",
+          `${import.meta.env.VITE_API_BASE_URL}/api/AdminUser/all-users`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -151,6 +151,12 @@ const ProjectManagerProjects = () => {
     const [dd, mm, yyyy] = date.split("-");
     return `${yyyy}-${mm}-${dd}`;
   }
+
+  const formatDateForBackend = (dateString) => {
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
+  };
 
   const handleUpdateProject = async (projectIdToUpdate, updatedProject) => {
     if (
@@ -178,14 +184,14 @@ const ProjectManagerProjects = () => {
         projectTitle: updatedProject.title,
         projectDescription: updatedProject.description,
         projectStatus: updatedProject.status,
-        projectStartDate: updatedProject.startDate,
-        projectDeadLine: updatedProject.deadline,
+        projectStartDate: formatDateForBackend(updatedProject.startDate),
+        projectDeadLine: formatDateForBackend(updatedProject.deadline),
         createdByUserId: Number(currentUserId),
         assignedUserIds: updatedProject.assignedUsers.map(Number),
       };
 
-      console.log("Update Project Payload:", payload);
-      console.log("Updating Project ID:", projectIdToUpdate);
+      // removed debug log
+      // removed debug log
 
       const response = await axios.put(
         `${import.meta.env.VITE_API_BASE_URL}/api/Project/update/${projectIdToUpdate}`,
@@ -335,12 +341,12 @@ const ProjectManagerProjects = () => {
         projectTitle: newProjectData.title,
         projectDescription: newProjectData.description,
         projectStatus: newProjectData.status,
-        projectStartDate: newProjectData.startDate,
-        projectDeadLine: newProjectData.deadline,
+        projectStartDate: formatDateForBackend(newProjectData.startDate),
+        projectDeadLine: formatDateForBackend(newProjectData.deadline),
         createdByUserId: Number(currentUserId),
         assignedUserIds: newProjectData.assignedUsers.map(Number),
       };
-      console.log("Create Project Payload:", payload);
+      // removed debug log
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/Project/create`,
         payload,
@@ -480,11 +486,7 @@ const ProjectManagerProjects = () => {
         <aside
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-black transition-transform
               ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
-              ${
-                sidebarOpen || window.innerWidth >= 640 ?
-                  "translate-x-0"
-                : "-translate-x-full"
-              }`}
+              ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8">
             <ul className="space-y-4">

@@ -57,7 +57,7 @@ const RegisterForm = () => {
     } catch (error) {
       if (error.response) {
         console.error("Register error:", error.response.data?.message);
-        console.log("HTTP Status Code:", error.response.status);
+        // removed debug log
 
         if (error.response.status === 400) {
           if (

@@ -10,15 +10,15 @@ import { LiaComments } from "react-icons/lia";
 import { RxHamburgerMenu, RxDashboard, RxActivityLog } from "react-icons/rx";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../main";
+import useWindowWidth from "../../hooks/useWindowWidth";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const DeveloperDashboard = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
-  );
+  const width = useWindowWidth();
+  const [sidebarOpen, setSidebarOpen] = useState(() => width >= 1024);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
   const [displayText, setDisplayText] = useState("");
@@ -111,9 +111,18 @@ const DeveloperDashboard = () => {
             fetch(`${import.meta.env.VITE_API_BASE_URL}/api/Project/get`, {
               headers,
             }),
-            fetch("http://localhost:5294/AdminUser/all-users", { headers }),
-            fetch("http://localhost:5294/Task/get", { headers }),
-            fetch("http://localhost:5294/ActivityLog/get", { headers }),
+            fetch(
+              `${import.meta.env.VITE_API_BASE_URL}/api/AdminUser/all-users`,
+              {
+                headers,
+              },
+            ),
+            fetch(`${import.meta.env.VITE_API_BASE_URL}/api/Task/get`, {
+              headers,
+            }),
+            fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ActivityLog/get`, {
+              headers,
+            }),
           ]);
 
         if (
@@ -141,7 +150,7 @@ const DeveloperDashboard = () => {
         const tasks = await tasksRes.json();
         const activities = await activitiesRes.json();
 
-        console.log("Fetched Activities:", activities);
+        // removed debug log
         const userProjects = projects.filter(
           (project) =>
             project.assignedUserIds &&
@@ -151,7 +160,7 @@ const DeveloperDashboard = () => {
           (task) => task.assignedUserId === Number(currentUserId),
         );
 
-        console.log("User Tasks:", userTasks);
+        // removed debug log
         const processedActivities = activities
           .sort((a, b) => new Date(b.activityTime) - new Date(a.activityTime))
           .slice(0, 5)
@@ -178,7 +187,7 @@ const DeveloperDashboard = () => {
             };
           });
 
-        console.log("Processed Activities:", processedActivities);
+        // removed debug log
 
         setRecentActivities(processedActivities);
         const totalTasks = userTasks.length;
@@ -369,11 +378,7 @@ const DeveloperDashboard = () => {
         <aside
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-white to-blue-200 dark:from-gray-900 dark:to-black transition-transform
           ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
-          ${
-            sidebarOpen || window.innerWidth >= 640 ?
-              "translate-x-0"
-            : "-translate-x-full"
-          }`}
+            ${sidebarOpen || width >= 640 ? "translate-x-0" : "-translate-x-full"}`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
             <ul className="space-y-4">

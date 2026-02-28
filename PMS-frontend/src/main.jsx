@@ -1,11 +1,19 @@
-import React, { StrictMode, useState, useEffect, createContext, Component } from "react";
+import React, {
+  StrictMode,
+  useState,
+  useEffect,
+  createContext,
+  Component,
+} from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
+import axios from "axios";
+import "./api/axiosInstance";
 
 export const ThemeContext = createContext({
   theme: "light",
-  toggleTheme: () => { },
+  toggleTheme: () => {},
 });
 
 class ErrorBoundary extends Component {
@@ -32,7 +40,7 @@ class ErrorBoundary extends Component {
 
 const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(
-    () => localStorage.getItem("theme") || "light"
+    () => localStorage.getItem("theme") || "light",
   );
 
   useEffect(() => {
@@ -69,8 +77,22 @@ function render() {
           <App />
         </ThemeProvider>
       </StrictMode>
-    </ErrorBoundary>
+    </ErrorBoundary>,
   );
+}
+
+// Configure global axios defaults for runtime requests (production-ready)
+try {
+  axios.defaults.baseURL =
+    import.meta.env.VITE_API_BASE_URL || axios.defaults.baseURL;
+  const token = localStorage.getItem("token");
+  if (token) {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    delete axios.defaults.headers.common["Authorization"];
+  }
+} catch (err) {
+  // keep silent if running outside browser environment
 }
 
 render();
@@ -80,4 +102,3 @@ if (import.meta.hot) {
     render();
   });
 }
-

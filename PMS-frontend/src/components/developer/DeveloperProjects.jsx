@@ -8,13 +8,13 @@ import { RxHamburgerMenu, RxDashboard, RxActivityLog } from "react-icons/rx";
 import { LiaComments } from "react-icons/lia";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../main";
+import useWindowWidth from "../../hooks/useWindowWidth";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const DeveloperProjects = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
-  );
+  const width = useWindowWidth();
+  const [sidebarOpen, setSidebarOpen] = useState(() => width >= 1024);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
   const [userName, setUserName] = useState("");
@@ -106,8 +106,7 @@ const DeveloperProjects = () => {
         );
 
         setProjects(userProjects);
-        console.log(`Filtered ${response.data.length} projects to
-           ${userProjects.length} assigned to user ID ${userId}`);
+        // removed debug log
       } catch (error) {
         console.error("Failed to fetch projects:", error);
         toast.error("Failed to load projects. Please try again.");
@@ -119,7 +118,7 @@ const DeveloperProjects = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          "http://localhost:5294/AdminUser/all-users",
+          `${import.meta.env.VITE_API_BASE_URL}/api/AdminUser/all-users`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -147,41 +146,39 @@ const DeveloperProjects = () => {
   }
 
   const handleUpdateProject = async (projectIdToUpdate, updatedProject) => {
+    // removed debug log
     if (
-      !updatedProject.title ||
-      !updatedProject.description ||
+      !updatedProject.title?.trim() ||
+      !updatedProject.description?.trim() ||
       !updatedProject.status ||
       !updatedProject.startDate ||
-      !updatedProject.deadline ||
-      !updatedProject.createdByUserId ||
-      !updatedProject.assignedUsers ||
+      !updatedProject.deadline
+    ) {
+      toast.error("All fields are required.");
+      return;
+    }
+
+    if (
+      !Array.isArray(updatedProject.assignedUsers) ||
       updatedProject.assignedUsers.length === 0
     ) {
-      toast.error(
-        "All fields are required and at least one user must be assigned.",
-      );
+      toast.error("At least one user must be assigned.");
       return;
     }
     try {
       const token = localStorage.getItem("token");
-      console.log("Status before payload:", updatedProject.status);
-      console.log("Status type:", typeof updatedProject.status);
-      console.log("Status length:", updatedProject.status.length);
-      console.log(
-        "Status char codes:",
-        Array.from(updatedProject.status).map((c) => c.charCodeAt(0)),
-      );
+      // removed debug logs
 
       const payload = {
         projectTitle: updatedProject.title,
         projectDescription: updatedProject.description,
-        projectStatus: "Not Started",
+        projectStatus: updatedProject.status,
         projectStartDate: toDDMMYYYYfromInput(updatedProject.startDate),
         projectDeadLine: toDDMMYYYYfromInput(updatedProject.deadline),
         createdByUserId: Number(updatedProject.createdByUserId),
         assignedUserIds: updatedProject.assignedUsers.map(Number),
       };
-      console.log("Update Project Payload:", payload);
+      // removed debug log
 
       const response = await axios.put(
         `${import.meta.env.VITE_API_BASE_URL}/api/Project/update/${projectIdToUpdate}`,
@@ -193,7 +190,7 @@ const DeveloperProjects = () => {
           },
         },
       );
-      console.log("Update response:", response.data);
+      // removed debug log
       const projectsResponse = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/api/Project/get`,
         {
@@ -251,7 +248,7 @@ const DeveloperProjects = () => {
   };
 
   const handleEdit = (project) => {
-    console.log("Original project status:", project.projectStatus);
+    // removed debug log
     setEditProjectId(project.projectId);
     setSidebarOpen(false);
     const editData = {
@@ -264,7 +261,7 @@ const DeveloperProjects = () => {
       assignedUsers:
         project.assignedUserIds ? project.assignedUserIds.map(String) : [],
     };
-    console.log("Setting edit data with status:", editData.status);
+    // removed debug log
     setEditProjectData(editData);
     toast.info(`Editing project: ${project.projectTitle}`);
   };
@@ -344,7 +341,7 @@ const DeveloperProjects = () => {
              to-white dark:from-gray-900 dark:to-black transition-transform
                 ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
                 ${
-                  sidebarOpen || window.innerWidth >= 640 ?
+                  sidebarOpen || width >= 640 ?
                     "translate-x-0"
                   : "-translate-x-full"
                 }`}
@@ -682,18 +679,21 @@ const DeveloperProjects = () => {
                           </div>
                         </td>
                       </tr>
-                    : visibleProjects.map((project, index) => (
+                    : visibleProjects.map((project) => (
                         <tr
-                          key={project.projectId}
-                          className={`${
-                            index % 2 === 0 ? "bg-white" : "bg-blue-50"
-                          } hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30`}
+                          key={`project-${project.projectId}`}
+                          className={
+                            "bg-white odd:bg-blue-50 hover:bg-blue-100 dark:bg-black/50 dark:hover:bg-purple-800/30"
+                          }
                         >
                           <td className="border border-black dark:border-white p-2">
                             {project.projectId}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ?
+                            {(
+                              editProjectId === project.projectId &&
+                              editProjectData
+                            ) ?
                               <input
                                 type="text"
                                 value={editProjectData.title || ""}
@@ -708,7 +708,10 @@ const DeveloperProjects = () => {
                             : project.projectTitle}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ?
+                            {(
+                              editProjectId === project.projectId &&
+                              editProjectData
+                            ) ?
                               <textarea
                                 value={editProjectData.description || ""}
                                 onChange={(e) =>
@@ -722,7 +725,10 @@ const DeveloperProjects = () => {
                             : project.projectDescription}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ?
+                            {(
+                              editProjectId === project.projectId &&
+                              editProjectData
+                            ) ?
                               <select
                                 value={editProjectData.status || ""}
                                 onChange={(e) =>
@@ -743,7 +749,10 @@ const DeveloperProjects = () => {
                             : project.projectStatus}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ?
+                            {(
+                              editProjectId === project.projectId &&
+                              editProjectData
+                            ) ?
                               <input
                                 type="date"
                                 value={editProjectData.startDate || ""}
@@ -758,7 +767,10 @@ const DeveloperProjects = () => {
                             : project.projectStartDate}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ?
+                            {(
+                              editProjectId === project.projectId &&
+                              editProjectData
+                            ) ?
                               <input
                                 type="date"
                                 value={editProjectData.deadline || ""}
@@ -773,7 +785,10 @@ const DeveloperProjects = () => {
                             : project.projectDeadLine}
                           </td>
                           <td className="border border-black dark:border-white p-2">
-                            {editProjectId === project.projectId ?
+                            {(
+                              editProjectId === project.projectId &&
+                              editProjectData
+                            ) ?
                               <select
                                 value={editProjectData.createdByUserId || ""}
                                 onChange={(e) =>
@@ -808,7 +823,10 @@ const DeveloperProjects = () => {
                             }
                           </td>
                           <td className="border border-black dark:border-white p-2 ">
-                            {editProjectId === project.projectId ?
+                            {(
+                              editProjectId === project.projectId &&
+                              editProjectData
+                            ) ?
                               <select
                                 multiple
                                 value={editProjectData.assignedUsers || []}
@@ -848,15 +866,23 @@ const DeveloperProjects = () => {
                           </td>
                           <td className="border border-black dark:border-white p-2">
                             <div className="flex flex-row gap-x-2">
-                              {editProjectId === project.projectId ?
+                              {(
+                                editProjectId === project.projectId &&
+                                editProjectData
+                              ) ?
                                 <>
                                   <button
-                                    onClick={() =>
-                                      handleUpdateProject(
+                                    onClick={async () => {
+                                      await handleUpdateProject(
                                         project.projectId,
                                         editProjectData,
-                                      )
-                                    }
+                                      );
+
+                                      setTimeout(() => {
+                                        // setEditProjectId(null);
+                                        // setEditProjectData({});
+                                      }, 0);
+                                    }}
                                     className="bg-green-500 text-white p-1 rounded hover:bg-green-600"
                                   >
                                     Save

@@ -12,13 +12,13 @@ import { RxHamburgerMenu, RxDashboard, RxActivityLog } from "react-icons/rx";
 import { FiUsers } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../main";
+import useWindowWidth from "../../hooks/useWindowWidth";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const AdminUsers = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(
-    () => typeof window !== "undefined" && window.innerWidth >= 1024
-  );
+  const width = useWindowWidth();
+  const [sidebarOpen, setSidebarOpen] = useState(() => width >= 1024);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
   const [userName, setUserName] = useState("");
@@ -68,18 +68,18 @@ const AdminUsers = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          "http://localhost:5294/AdminUser/all-users",
+          `${import.meta.env.VITE_API_BASE_URL}/api/AdminUser/all-users`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         const sortedUsers = [...response.data].sort(
-          (a, b) => a.userId - b.userId
+          (a, b) => a.userId - b.userId,
         );
         setUsers(sortedUsers);
-        toast.success("Users loaded successfully");
+        // removed debug toast: users loaded
       } catch (error) {
         console.error("Failed to fetch users:", error);
         toast.error("Failed to load users");
@@ -94,14 +94,14 @@ const AdminUsers = () => {
 
       try {
         await axios.put(
-          `http://localhost:5294/AdminUser/update-role/${userIdToUpdate}`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/AdminUser/update-role/${userIdToUpdate}`,
           JSON.stringify(newRole),
           {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         toast.success(`User role updated to ${newRole}`);
       } catch (apiError) {
@@ -110,7 +110,9 @@ const AdminUsers = () => {
       }
       setUsers((prev) => {
         const updatedUsers = prev.map((user) =>
-          user.userId === userIdToUpdate ? { ...user, userRole: newRole } : user
+          user.userId === userIdToUpdate ?
+            { ...user, userRole: newRole }
+          : user,
         );
         return updatedUsers.sort((a, b) => a.userId - b.userId);
       });
@@ -127,16 +129,16 @@ const AdminUsers = () => {
       try {
         const token = localStorage.getItem("token");
         await axios.delete(
-          `http://localhost:5294/AdminUser/delete-user/${userIdToDelete}`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/AdminUser/delete-user/${userIdToDelete}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setUsers((prev) => {
           const filteredUsers = prev.filter(
-            (user) => user.userId !== userIdToDelete
+            (user) => user.userId !== userIdToDelete,
           );
           return filteredUsers.sort((a, b) => a.userId - b.userId);
         });
@@ -153,9 +155,10 @@ const AdminUsers = () => {
     setEditRole(currentRole);
   };
 
-  const filteredUsers = filterRole
-    ? users.filter(
-        (user) => user.userRole.toLowerCase() === filterRole.toLowerCase()
+  const filteredUsers =
+    filterRole ?
+      users.filter(
+        (user) => user.userRole.toLowerCase() === filterRole.toLowerCase(),
       )
     : users;
 
@@ -176,9 +179,9 @@ const AdminUsers = () => {
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-black transition-transform
             ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
             ${
-              sidebarOpen || window.innerWidth >= 640
-                ? "translate-x-0"
-                : "-translate-x-full"
+              sidebarOpen || width >= 640 ?
+                "translate-x-0"
+              : "-translate-x-full"
             }`}
         >
           <div className="h-full text-black dark:text-white text-md font-medium px-4 py-8 overflow-y-auto">
@@ -239,11 +242,9 @@ const AdminUsers = () => {
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
             >
-              {theme === "dark" ? (
+              {theme === "dark" ?
                 <MdOutlineLightMode size={18} />
-              ) : (
-                <MdOutlineDarkMode size={18} />
-              )}
+              : <MdOutlineDarkMode size={18} />}
             </button>
 
             <div
@@ -352,7 +353,7 @@ const AdminUsers = () => {
                           {user.userEmail}
                         </td>
                         <td className="border border-black dark:border-white p-2">
-                          {editUserId === user.userId ? (
+                          {editUserId === user.userId ?
                             <div className="flex gap-2 items-center">
                               <input
                                 type="text"
@@ -375,9 +376,7 @@ const AdminUsers = () => {
                                 Cancel
                               </button>
                             </div>
-                          ) : (
-                            user.userRole
-                          )}
+                          : user.userRole}
                         </td>
                         <td className="border border-black dark:border-white p-2">
                           {editUserId !== user.userId && (

@@ -11,11 +11,11 @@ import { LiaComments } from "react-icons/lia";
 import { RxHamburgerMenu, RxDashboard, RxActivityLog } from "react-icons/rx";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../main";
+import useWindowWidth from "../../hooks/useWindowWidth";
 
 const DeveloperSettings = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false
-  );
+  const width = useWindowWidth();
+  const [sidebarOpen, setSidebarOpen] = useState(() => width >= 1024);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
   const [userName, setUserName] = useState("");
@@ -184,11 +184,9 @@ const DeveloperSettings = () => {
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
             >
-              {theme === "dark" ? (
+              {theme === "dark" ?
                 <MdOutlineLightMode size={18} />
-              ) : (
-                <MdOutlineDarkMode size={18} />
-              )}
+              : <MdOutlineDarkMode size={18} />}
             </button>
 
             <div
@@ -254,9 +252,9 @@ const DeveloperSettings = () => {
               <button
                 onClick={() => setActiveTab("account")}
                 className={`px-4 py-2 font-medium rounded-t-lg transition-all ${
-                  activeTab === "account"
-                    ? "text-white"
-                    : "hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                  activeTab === "account" ? "text-white" : (
+                    "hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                  )
                 }`}
                 style={{
                   backgroundColor:
@@ -353,17 +351,16 @@ const DeveloperSettings = () => {
                   </h3>
                   <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg mb-6">
                     <div className="flex items-center gap-3">
-                      {theme === "dark" ? (
+                      {theme === "dark" ?
                         <MdOutlineDarkMode className="text-xl text-blue-500" />
-                      ) : (
-                        <MdOutlineLightMode className="text-xl text-blue-500" />
-                      )}
+                      : <MdOutlineLightMode className="text-xl text-blue-500" />
+                      }
                       <div>
                         <h3 className="font-medium">Theme</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {theme === "dark"
-                            ? "Dark mode is enabled"
-                            : "Light mode is enabled"}
+                          {theme === "dark" ?
+                            "Dark mode is enabled"
+                          : "Light mode is enabled"}
                         </p>
                       </div>
                     </div>

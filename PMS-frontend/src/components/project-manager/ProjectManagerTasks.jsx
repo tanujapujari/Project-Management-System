@@ -12,10 +12,12 @@ import { FaUser, FaAngleDown, FaTasks } from "react-icons/fa";
 import { RxHamburgerMenu, RxDashboard, RxActivityLog } from "react-icons/rx";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../main";
+import useWindowWidth from "../../hooks/useWindowWidth";
 
 const ProjectManagerTasks = () => {
+  const width = useWindowWidth();
   const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth >= 1024 ? true : false,
+    width >= 1024 ? true : false,
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [role, setRole] = useState("");
@@ -106,11 +108,14 @@ const ProjectManagerTasks = () => {
         return;
       }
       try {
-        const response = await axios.get("http://localhost:5294/Task/get", {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/Task/get`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
         setTasks(response.data);
       } catch (error) {
         if (error.response && error.response.status === 401) {
@@ -130,7 +135,7 @@ const ProjectManagerTasks = () => {
       }
       try {
         const response = await axios.get(
-          "http://localhost:5294/AdminUser/all-users",
+          `${import.meta.env.VITE_API_BASE_URL}/api/AdminUser/all-users`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -259,10 +264,10 @@ const ProjectManagerTasks = () => {
         createdAt: formattedDate,
       };
 
-      console.log("Updating task with payload:", payload);
+      // removed debug log
 
       const response = await axios.put(
-        `http://localhost:5294/Task/update/${taskIdToUpdate}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/Task/update/${taskIdToUpdate}`,
         payload,
         {
           headers: {
@@ -272,12 +277,15 @@ const ProjectManagerTasks = () => {
         },
       );
 
-      console.log("Update response:", response.data); // Debug log
+      // removed debug log
 
       // Refresh tasks from backend to reflect update
-      const tasksResponse = await axios.get("http://localhost:5294/Task/get", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const tasksResponse = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/Task/get`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       setTasks(tasksResponse.data);
       setEditTaskId(null);
       setEditTaskData({});
@@ -305,7 +313,7 @@ const ProjectManagerTasks = () => {
       try {
         const token = localStorage.getItem("token");
         await axios.delete(
-          `http://localhost:5294/Task/delete/${taskIdToDelete}`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/Task/delete/${taskIdToDelete}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -343,9 +351,9 @@ const ProjectManagerTasks = () => {
         assignedUserId: Number(newTaskData.assignedUserId),
         projectId: Number(newTaskData.projectId),
       };
-      console.log("Payload:", payload);
+      // removed debug log
       const response = await axios.post(
-        "http://localhost:5294/Task/create",
+        `${import.meta.env.VITE_API_BASE_URL}/api/Task/create`,
         payload,
         {
           headers: {
@@ -390,7 +398,7 @@ const ProjectManagerTasks = () => {
           className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-black transition-transform
              ${sidebarOpen ? "w-full md:w-55" : "w-16 sm:w-14 mt-6"}
              ${
-               sidebarOpen || window.innerWidth >= 640 ?
+               sidebarOpen || width >= 640 ?
                  "translate-x-0"
                : "-translate-x-full"
              }`}
