@@ -131,7 +131,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(
         "AllowFrontend",
-        policy => policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod()
+        policy =>
+            policy
+                .WithOrigins(
+                    "http://localhost:5173",
+                    "https://project-management-system-ovh5.vercel.app"
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod()
     );
 });
 
@@ -149,7 +156,7 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseCors("AllowReactApp");
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
