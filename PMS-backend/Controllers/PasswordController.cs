@@ -178,10 +178,7 @@ namespace ProjectManagementSystem.Controllers
                 _logger.LogError(
                     $"Error processing forgot password for {request.UserEmail}: {ex.Message}"
                 );
-                return StatusCode(
-                    500,
-                    "An error occurred while processing your request. Please try again later."
-                );
+                return StatusCode(500, ex.Message);
             }
         }
 
